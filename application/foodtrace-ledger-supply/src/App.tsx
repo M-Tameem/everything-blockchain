@@ -12,6 +12,7 @@ import CreateShipment from "./pages/CreateShipment";
 import PublicTracker from "./pages/PublicTracker";
 import AdminPanel from "./pages/AdminPanel";
 import AllShipments from "./pages/AllShipments";
+import TransformProductsPage from "./pages/TransformProductsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,16 +69,24 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
-      <Route 
-        path="/shipments/new" 
+      <Route
+        path="/shipments/new"
         element={
           <ProtectedRoute>
             <CreateShipment />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/shipments/:id" 
+      <Route
+        path="/transform"
+        element={
+          <ProtectedRoute>
+            <TransformProductsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/shipments/:id"
         element={
           <ProtectedRoute>
             <ShipmentDetails />

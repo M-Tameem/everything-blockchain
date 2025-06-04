@@ -103,37 +103,21 @@ const Dashboard = () => {
       // In Dashboard.tsx, around line 85, change the distributor logic:
 
       } else if (user?.role === 'distributor') {
-        if (currentUserFullId) {
-          const allShipmentsResponse = await apiClient.getAllShipments(pageSize); 
-          const allShipments = allShipmentsResponse.shipments || [];
-          relevantShipments = allShipments.filter((s: any) =>
-            (s.status === 'PROCESSED') &&
-            s.processorData?.destinationDistributorId === currentUserFullId  // Fixed: changed from farmerData.destinationProcessorId
-          );
-        } else {
-          relevantShipments = [];
-          toast({ 
-            title: "Distributor Data Unavailable", 
-            description: "Cannot filter shipments for distributor without their Full ID.", 
-            variant: "destructive" 
-          });
-        }
+        const allShipmentsResponse = await apiClient.getAllShipments(pageSize);
+        const allShipments = allShipmentsResponse.shipments || [];
+        relevantShipments = allShipments.filter((s: any) => {
+          const target = s.processorData?.destinationDistributorId;
+          return (s.status === 'PROCESSED') &&
+            (target === currentUserFullId || target === user?.chaincode_alias);
+        });
       } else if (user?.role === 'retailer') {
-        if (currentUserFullId) {
-          const allShipmentsResponse = await apiClient.getAllShipments(pageSize);
-          const allShipments = allShipmentsResponse.shipments || [];
-          relevantShipments = allShipments.filter((s: any) =>
-            (s.status === 'DISTRIBUTED') &&
-            s.distributorData?.destinationRetailerId === currentUserFullId
-          );
-        } else {
-          relevantShipments = [];
-          toast({ 
-            title: "Retailer Data Unavailable", 
-            description: "Cannot filter shipments for retailer without their Full ID.", 
-            variant: "destructive" 
-          });
-        }
+        const allShipmentsResponse = await apiClient.getAllShipments(pageSize);
+        const allShipments = allShipmentsResponse.shipments || [];
+        relevantShipments = allShipments.filter((s: any) => {
+          const target = s.distributorData?.destinationRetailerId;
+          return (s.status === 'DISTRIBUTED') &&
+            (target === currentUserFullId || target === user?.chaincode_alias);
+        });
       } else if (user?.is_admin) { // For admin role
         const allShipmentsResponse = await apiClient.getAllShipments(pageSize);
         relevantShipments = allShipmentsResponse.shipments || [];
@@ -203,6 +187,18 @@ const Dashboard = () => {
             <Link to="/shipments/new">
               <Plus className="h-4 w-4 mr-2" />
               Create Shipment
+            </Link>
+          </Button>
+        </div>
+      );
+    }
+    if (user?.role === 'processor') {
+      return (
+        <div className="flex space-x-4">
+          <Button asChild className="bg-purple-600 hover:bg-purple-700">
+            <Link to="/transform">
+              <Plus className="h-4 w-4 mr-2" />
+              Transform Products
             </Link>
           </Button>
         </div>
