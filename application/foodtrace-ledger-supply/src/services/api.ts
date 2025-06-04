@@ -161,6 +161,10 @@ class ApiClient {
     });
   }
 
+  async getAliasesByRole(role: string) {
+    return this.request<string[]>(`/api/aliases/role/${encodeURIComponent(role)}`);
+  }
+
   async removeAdmin(alias: string) {
     return this.request<any>(`/api/identities/${encodeURIComponent(alias)}/admin`, {
       method: 'DELETE',

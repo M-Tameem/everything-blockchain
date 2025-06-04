@@ -8,12 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiClient } from '@/services/api';
+import { useAliases } from '@/hooks/use-aliases';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Package, TestTubeDiagonal } from 'lucide-react'; // Added TestTubeDiagonal for demo button
 
 const CreateShipment = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const processorAliases = useAliases('processor');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     shipmentId: '',
@@ -357,13 +359,20 @@ const CreateShipment = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="destinationProcessorId">Destination Processor ID</Label>
-                <Input
-                  id="destinationProcessorId"
+                <Label htmlFor="destinationProcessorId">Destination Processor</Label>
+                <Select
                   value={formData.destinationProcessorId}
-                  onChange={(e) => handleInputChange('destinationProcessorId', e.target.value)}
-                  placeholder="ID of the processor who will receive this shipment"
-                />
+                  onValueChange={(value) => handleInputChange('destinationProcessorId', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select processor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {processorAliases.map(alias => (
+                      <SelectItem key={alias} value={alias}>{alias}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
