@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/services/api';
 
+export interface Shipment {
+  id: string
+  shipmentID?: string
+  productName?: string
+  status?: string
+  [key: string]: unknown
+}
+
 export function useMyShipments() {
-  const [shipments, setShipments] = useState<any[]>([]);
+  const [shipments, setShipments] = useState<Shipment[]>([]);
 
   useEffect(() => {
     let isMounted = true;

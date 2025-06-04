@@ -30,7 +30,7 @@ const TransformProductsPage: React.FC = () => {
   const distributorAliases = useAliases('distributor');
 
   const consumable = myShipments.filter(s =>
-    ['PROCESSED', 'CERTIFIED', 'DELIVERED'].includes(s.status)
+    ['PROCESSED', 'CERTIFIED', 'DELIVERED'].includes(String(s.status))
   );
 
   const [inputs, setInputs] = useState<InputRow[]>([{ shipmentId: '' }]);
@@ -114,9 +114,20 @@ const TransformProductsPage: React.FC = () => {
                       <Select value={row.shipmentId} onValueChange={val=>updateInput(idx,val)}>
                         <SelectTrigger><SelectValue placeholder="Select shipment" /></SelectTrigger>
                         <SelectContent>
-                          {consumable.map(s=> (
-                            <SelectItem key={s.id || s.shipmentID} value={s.id || s.shipmentID}>{s.productName} ({s.id || s.shipmentID})</SelectItem>
-                          ))}
+                          {consumable.length === 0 ? (
+                            <div className="px-2 py-1 text-muted-foreground text-sm">
+                              No available shipments
+                            </div>
+                          ) : (
+                            consumable.map(s => (
+                              <SelectItem
+                                key={s.shipmentID || s.id}
+                                value={String(s.shipmentID || s.id)}
+                              >
+                                {s.productName} ({s.shipmentID || s.id})
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -192,9 +203,13 @@ const TransformProductsPage: React.FC = () => {
                   <Select value={procData.destinationDistributorId} onValueChange={val=>updateProc('destinationDistributorId',val)}>
                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
-                      {distributorAliases.map(a=> (
-                        <SelectItem key={a} value={a}>{a}</SelectItem>
-                      ))}
+                      {distributorAliases.length === 0 ? (
+                        <div className="px-2 py-1 text-muted-foreground text-sm">No distributors</div>
+                      ) : (
+                        distributorAliases.map(a => (
+                          <SelectItem key={a} value={a}>{a}</SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
