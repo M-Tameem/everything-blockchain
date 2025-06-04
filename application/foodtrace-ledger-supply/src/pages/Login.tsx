@@ -20,12 +20,12 @@ const Login = () => {
   const API_BASE_URL = 'http://localhost:3001';
 
   const demoUsers: Record<string, { username: string; password: string; chaincode_alias: string; role: string }> = {
-    farmer: { username: 'testf', password: 'testf', chaincode_alias: 'DemoFarmer', role: 'farmer' },
-    processor: { username: 'testp', password: 'testp', chaincode_alias: 'DemoProcessor', role: 'processor' },
-    distributor: { username: 'testd', password: 'testd', chaincode_alias: 'DemoDistributor', role: 'distributor' },
-    retailer: { username: 'testr', password: 'testr', chaincode_alias: 'DemoRetailer', role: 'retailer' },
-    certifier: { username: 'testc', password: 'testc', chaincode_alias: 'DemoCertifier', role: 'certifier' },
-    admin: { username: 'testa', password: 'testa', chaincode_alias: 'DemoAdmin', role: 'admin' },
+    farmer: { username: 'testf1', password: 'testf', chaincode_alias: 'DemoFarmer1', role: 'farmer' },
+    processor: { username: 'testp1', password: 'testp', chaincode_alias: 'DemoProcessor1', role: 'processor' },
+    distributor: { username: 'testd1', password: 'testd', chaincode_alias: 'DemoDistributor1', role: 'distributor' },
+    retailer: { username: 'testr1', password: 'testr', chaincode_alias: 'DemoRetailer1', role: 'retailer' },
+    certifier: { username: 'testc1', password: 'testc', chaincode_alias: 'DemoCertifier1', role: 'certifier' },
+    admin: { username: 'testa1', password: 'testa', chaincode_alias: 'DemoAdmin1', role: 'admin' },
   };
 
   const handleDemoSignup = async () => {
