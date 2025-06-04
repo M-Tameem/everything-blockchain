@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Leaf, TruckIcon, Building, ShieldCheck } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
@@ -14,6 +15,57 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
+  const [demoRole, setDemoRole] = useState('farmer');
+
+  const API_BASE_URL = 'http://localhost:3001';
+
+  const demoUsers: Record<string, { username: string; password: string; chaincode_alias: string; role: string }> = {
+    farmer: { username: 'testf', password: 'testf', chaincode_alias: 'DemoFarmer', role: 'farmer' },
+    processor: { username: 'testp', password: 'testp', chaincode_alias: 'DemoProcessor', role: 'processor' },
+    distributor: { username: 'testd', password: 'testd', chaincode_alias: 'DemoDistributor', role: 'distributor' },
+    retailer: { username: 'testr', password: 'testr', chaincode_alias: 'DemoRetailer', role: 'retailer' },
+    certifier: { username: 'testc', password: 'testc', chaincode_alias: 'DemoCertifier', role: 'certifier' },
+    admin: { username: 'testa', password: 'testa', chaincode_alias: 'DemoAdmin', role: 'admin' },
+  };
+
+  const handleDemoSignup = async () => {
+    const userData = demoUsers[demoRole];
+    setLoading(true);
+    try {
+      await login(userData.username, userData.password);
+      toast({ title: 'Demo login successful', description: `Logged in as ${demoRole}` });
+    } catch (err) {
+      try {
+        const adminRes = await fetch(`${API_BASE_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const adminData = await adminRes.json();
+        if (!adminRes.ok) throw new Error(adminData.error || 'Admin login failed');
+
+        await fetch(`${API_BASE_URL}/api/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminData.token}`
+          },
+          body: JSON.stringify(userData)
+        });
+
+        await login(userData.username, userData.password);
+        toast({ title: 'Demo account created', description: `Logged in as ${demoRole}` });
+      } catch (e) {
+        toast({
+          title: 'Demo signup failed',
+          description: e instanceof Error ? e.message : 'Unknown error',
+          variant: 'destructive'
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,11 +175,30 @@ const Login = () => {
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
+            <div className="mt-4 space-y-2">
+              <Label className="text-sm" htmlFor="demoRole">Demo Role</Label>
+              <div className="flex items-center space-x-2">
+                <Select value={demoRole} onValueChange={setDemoRole}>
+                  <SelectTrigger id="demoRole" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="farmer">Farmer</SelectItem>
+                    <SelectItem value="processor">Processor</SelectItem>
+                    <SelectItem value="distributor">Distributor</SelectItem>
+                    <SelectItem value="retailer">Retailer</SelectItem>
+                    <SelectItem value="certifier">Certifier</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" onClick={handleDemoSignup} disabled={loading}>
+                  {loading ? 'Working...' : 'Signup Demo'}
+                </Button>
+              </div>
+            </div>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Demo Credentials Available
-              </p>
+              <p className="text-sm text-gray-600">Demo Credentials Available</p>
               <div className="mt-2 flex items-center justify-center space-x-2">
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
                 <span className="text-xs text-gray-500">Blockchain Secured</span>
