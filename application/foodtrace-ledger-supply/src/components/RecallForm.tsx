@@ -18,6 +18,7 @@ const RecallForm: React.FC<RecallFormProps> = ({ shipmentId, onSuccess, onCancel
   const [loading, setLoading] = useState(false);
   const [reason, setReason] = useState('');
   const [related, setRelated] = useState<any[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
 
   useEffect(() => {
@@ -27,6 +28,8 @@ const RecallForm: React.FC<RecallFormProps> = ({ shipmentId, onSuccess, onCancel
         setRelated(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to load related shipments', err);
+      } finally {
+        setRelatedLoading(false);
       }
     };
     load();
@@ -52,7 +55,7 @@ const RecallForm: React.FC<RecallFormProps> = ({ shipmentId, onSuccess, onCancel
       if (selected.length > 0) {
         await apiClient.addLinkedShipmentsToRecall(recallId, shipmentId, selected);
       }
-      toast({ title: 'Recall initiated', description: `Recall ${recallId} created.` });
+      toast({ title: 'Recall initiated', description: `Primary recall ${recallId} created.` });
       onSuccess();
     } catch (error) {
       toast({ title: 'Error initiating recall', description: error instanceof Error ? error.message : 'Failed', variant: 'destructive' });
@@ -68,7 +71,10 @@ const RecallForm: React.FC<RecallFormProps> = ({ shipmentId, onSuccess, onCancel
           <AlertTriangle className="h-5 w-5 text-red-600" />
           <span>Initiate Recall</span>
         </CardTitle>
-        <CardDescription>Start a recall for this shipment</CardDescription>
+        <CardDescription>
+          This creates a new recall event for the selected shipment. Any boxes you
+          check below will be linked to that event after it is created.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -76,7 +82,10 @@ const RecallForm: React.FC<RecallFormProps> = ({ shipmentId, onSuccess, onCancel
             <Label htmlFor="reason">Reason *</Label>
             <Textarea id="reason" value={reason} onChange={e => setReason(e.target.value)} required rows={3} />
           </div>
-          {related.length > 0 && (
+          {relatedLoading && (
+            <div className="text-sm text-gray-500">Loading related shipments...</div>
+          )}
+          {!relatedLoading && related.length > 0 && (
             <div>
               <Label>Select Related Shipments</Label>
               <div className="max-h-40 overflow-y-auto space-y-1 border rounded p-2">
