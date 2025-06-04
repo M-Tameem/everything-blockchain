@@ -365,9 +365,6 @@ func (s *FoodtraceSmartContract) QueryRelatedShipments(ctx contractapi.Transacti
 	if err != nil {
 		return nil, fmt.Errorf("QueryRelatedShipments: recalled shipment '%s' not found: %w", recalledShipmentID, err)
 	}
-	if !rShip.RecallInfo.IsRecalled {
-		return nil, fmt.Errorf("shipment '%s' is not marked as recalled, cannot query related items based on its recall data", recalledShipmentID)
-	}
 
 	// FIXED: Initialize as empty slice, not nil
 	relatedShipments := []model.RelatedShipmentInfo{}
@@ -395,7 +392,8 @@ func (s *FoodtraceSmartContract) QueryRelatedShipments(ctx contractapi.Transacti
 		if oShip.ID == recalledShipmentID {
 			continue
 		}
-		if oShip.RecallInfo.IsRecalled && oShip.RecallInfo.RecallID == rShip.RecallInfo.RecallID {
+		if rShip.RecallInfo.IsRecalled && rShip.RecallInfo.RecallID != "" &&
+			oShip.RecallInfo.IsRecalled && oShip.RecallInfo.RecallID == rShip.RecallInfo.RecallID {
 			continue
 		}
 
