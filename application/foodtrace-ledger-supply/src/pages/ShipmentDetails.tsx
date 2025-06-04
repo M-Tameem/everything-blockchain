@@ -134,7 +134,7 @@ const ShipmentDetails = () => {
         );
     }
     return user?.role === 'processor' &&
-           shipment?.status === 'CERTIFIED' &&
+           (shipment?.status === 'CERTIFIED' || shipment?.status === 'CREATED') &&
            user?.fullId && // Make sure fullId is available in user context
            shipment?.farmerData?.destinationProcessorId === user.fullId; // Compare Full ID with Full ID
   };
