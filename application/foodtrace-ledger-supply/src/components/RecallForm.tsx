@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/services/api';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X, TestTubeDiagonal } from 'lucide-react';
 
 interface RecallFormProps {
   shipmentId: string;
@@ -20,6 +20,14 @@ const RecallForm: React.FC<RecallFormProps> = ({ shipmentId, onSuccess, onCancel
   const [related, setRelated] = useState<any[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
+
+  const fillWithDemoData = () => {
+    setReason('Demo recall due to quality issue');
+    if (related.length > 0) {
+      setSelected([related[0].shipmentId]);
+    }
+    toast({ title: 'Demo data loaded' });
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -75,6 +83,10 @@ const RecallForm: React.FC<RecallFormProps> = ({ shipmentId, onSuccess, onCancel
           This creates a new recall event for the selected shipment. Any boxes you
           check below will be linked to that event after it is created.
         </CardDescription>
+        <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+          <TestTubeDiagonal className="h-4 w-4 mr-2" />
+          Fill with Demo Data
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

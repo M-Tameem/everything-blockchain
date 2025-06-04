@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TestTubeDiagonal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +62,25 @@ const TransformProductsPage: React.FC = () => {
 
   const updateProc = (field: keyof typeof procData, val: string)=> setProcData(d=>({...d,[field]:val}));
 
+  const fillWithDemoData = () => {
+    if (consumable.length > 0) {
+      setInputs([{ shipmentId: String(consumable[0].shipmentID || consumable[0].id) }]);
+    }
+    setProducts([{ newShipmentId: '', productName: 'Demo Sauce', description: 'Tasty demo product', quantity: '10', unitOfMeasure: 'kg' }]);
+    const now = new Date();
+    const expiry = new Date();
+    expiry.setDate(now.getDate()+90);
+    setProcData({
+      processingType: 'Blending',
+      processingLineId: 'LINE_DEMO',
+      dateProcessed: now.toISOString().slice(0,16),
+      outputBatchId: 'BATCH_DEMO',
+      expiryDate: expiry.toISOString().slice(0,10),
+      destinationDistributorId: distributorAliases[0] || ''
+    });
+    toast({ title: 'Demo data loaded' });
+  };
+
   const handleSubmit = async (e:React.FormEvent)=>{
     e.preventDefault();
     const selected = inputs.map(i=>i.shipmentId).filter(id=>id);
@@ -103,6 +123,10 @@ const TransformProductsPage: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Transform Products</CardTitle>
+            <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+              <TestTubeDiagonal className="h-4 w-4 mr-2" />
+              Fill with Demo Data
+            </Button>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">

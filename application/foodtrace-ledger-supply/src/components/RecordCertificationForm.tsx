@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { ShieldCheck, X } from 'lucide-react';
+import { ShieldCheck, X, TestTubeDiagonal } from 'lucide-react';
 
 interface RecordCertificationFormProps {
   shipmentId: string;
@@ -35,6 +35,17 @@ const RecordCertificationForm: React.FC<RecordCertificationFormProps> = ({
 
   const handleSelectChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const fillWithDemoData = () => {
+    const now = new Date();
+    setFormData({
+      inspectionDate: now.toISOString().slice(0,16),
+      inspectionReportHash: 'demo_hash_123',
+      certificationStatus: 'APPROVED',
+      comments: 'All standards met.'
+    });
+    toast({ title: 'Demo data loaded' });
   };
 
 
@@ -103,6 +114,10 @@ const RecordCertificationForm: React.FC<RecordCertificationFormProps> = ({
         <CardDescription>
           Record the certification inspection results for this shipment.
         </CardDescription>
+        <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+          <TestTubeDiagonal className="h-4 w-4 mr-2" />
+          Fill with Demo Data
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

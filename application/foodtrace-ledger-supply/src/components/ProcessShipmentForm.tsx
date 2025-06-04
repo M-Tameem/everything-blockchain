@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'; // For qualityCertification
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAliases } from '@/hooks/use-aliases';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, X, TestTubeDiagonal } from 'lucide-react';
 
 interface ProcessShipmentFormProps {
   shipmentId: string;
@@ -38,6 +38,24 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const fillWithDemoData = () => {
+    const now = new Date();
+    const expiry = new Date();
+    expiry.setDate(now.getDate() + 30);
+    setFormData({
+      processingType: 'Demo Washing',
+      processingLineId: 'LINE_DEMO_1',
+      dateProcessed: now.toISOString().slice(0,16),
+      contaminationCheck: 'PASSED',
+      outputBatchId: 'DEMO_BATCH_001',
+      expiryDate: expiry.toISOString().slice(0,10),
+      processingLocation: 'Demo Facility',
+      qualityCertifications: 'Organic,HACCP',
+      destinationDistributorId: distributorAliases[0] || ''
+    });
+    toast({ title: 'Demo data loaded' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,6 +154,10 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
         <CardDescription>
           Enter processing details for this shipment. All fields marked with * are required.
         </CardDescription>
+        <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+          <TestTubeDiagonal className="h-4 w-4 mr-2" />
+          Fill with Demo Data
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

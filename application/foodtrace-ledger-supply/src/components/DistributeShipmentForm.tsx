@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAliases } from '@/hooks/use-aliases';
-import { Truck, X } from 'lucide-react';
+import { Truck, X, TestTubeDiagonal } from 'lucide-react';
 
 interface DistributeShipmentFormProps {
   shipmentId: string;
@@ -38,6 +38,23 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const fillWithDemoData = () => {
+    const now = new Date();
+    const delivery = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+    setFormData({
+      pickupDateTime: now.toISOString().slice(0,16),
+      deliveryDateTime: delivery.toISOString().slice(0,16),
+      transportConditions: 'Refrigerated',
+      temperatureRange: '2-8°C',
+      storageTemperature: '5',
+      distributionCenter: 'Demo DC',
+      distributionLineId: 'TRUCK_DEMO_1',
+      transitLocationLog: 'Warehouse A, Hub B',
+      destinationRetailerId: retailerAliases[0] || ''
+    });
+    toast({ title: 'Demo data loaded' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,6 +147,10 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
         <CardDescription>
           Enter distribution and transport details. All fields marked with * are required.
         </CardDescription>
+        <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+          <TestTubeDiagonal className="h-4 w-4 mr-2" />
+          Fill with Demo Data
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
