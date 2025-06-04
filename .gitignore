@@ -48,3 +48,4 @@ test-results.xml
 
 # Misc
 *.swp
+chaincode/foodtrace.bin
