@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'; // For qualityCertifications as multi-line/CSV
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAliases } from '@/hooks/use-aliases';
 import { CheckCircle, X } from 'lucide-react';
 
 interface ProcessShipmentFormProps {
@@ -21,6 +22,7 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
   onCancel
 }) => {
   const { toast } = useToast();
+  const distributorAliases = useAliases('distributor');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     processingType: '',
@@ -236,13 +238,20 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="destinationDistributorId">Destination Distributor ID (Optional Alias)</Label>
-            <Input
-              id="destinationDistributorId"
+            <Label htmlFor="destinationDistributorId">Destination Distributor</Label>
+            <Select
               value={formData.destinationDistributorId}
-              onChange={(e) => handleInputChange('destinationDistributorId', e.target.value)}
-              placeholder="Enter alias of the next distributor"
-            />
+              onValueChange={(value) => handleInputChange('destinationDistributorId', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select distributor" />
+              </SelectTrigger>
+              <SelectContent>
+                {distributorAliases.map(alias => (
+                  <SelectItem key={alias} value={alias}>{alias}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
 

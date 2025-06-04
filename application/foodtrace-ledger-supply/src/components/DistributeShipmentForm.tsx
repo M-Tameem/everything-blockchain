@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAliases } from '@/hooks/use-aliases';
 import { Truck, X } from 'lucide-react';
 
 interface DistributeShipmentFormProps {
@@ -20,6 +22,7 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
   onCancel
 }) => {
   const { toast } = useToast();
+  const retailerAliases = useAliases('retailer');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     pickupDateTime: '',
@@ -223,13 +226,20 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="destinationRetailerId">Destination Retailer ID (Optional Full ID)</Label>
-            <Input
-              id="destinationRetailerId"
+            <Label htmlFor="destinationRetailerId">Destination Retailer</Label>
+            <Select
               value={formData.destinationRetailerId}
-              onChange={(e) => handleInputChange('destinationRetailerId', e.target.value)}
-              placeholder="Enter Full ID of the destination retailer"
-            />
+              onValueChange={(value) => handleInputChange('destinationRetailerId', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select retailer" />
+              </SelectTrigger>
+              <SelectContent>
+                {retailerAliases.map(alias => (
+                  <SelectItem key={alias} value={alias}>{alias}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end space-x-2 pt-2">

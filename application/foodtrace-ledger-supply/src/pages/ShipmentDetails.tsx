@@ -16,6 +16,10 @@ import ProcessShipmentForm from '@/components/ProcessShipmentForm';
 import DistributeShipmentForm from '@/components/DistributeShipmentForm';
 import ReceiveShipmentForm from '@/components/ReceiveShipmentForm';
 import RecordCertificationForm from '@/components/RecordCertificationForm';
+import RecallForm from '@/components/RecallForm';
+import ArchiveShipmentForm from '@/components/ArchiveShipmentForm';
+import TransformProductsForm from '@/components/TransformProductsForm';
+import QrCodeDisplay from '@/components/QrCodeDisplay';
 
 const ShipmentDetails = () => {
   const { id: paramId } = useParams<{ id: string }>();
@@ -29,6 +33,9 @@ const ShipmentDetails = () => {
   const [showDistributeForm, setShowDistributeForm] = useState(false);
   const [showReceiveForm, setShowReceiveForm] = useState(false);
   const [showCertificationForm, setShowCertificationForm] = useState(false);
+  const [showRecallForm, setShowRecallForm] = useState(false);
+  const [showArchiveForm, setShowArchiveForm] = useState(false);
+  const [showTransformForm, setShowTransformForm] = useState(false);
 
   useEffect(() => {
     console.log("ShipmentDetails useEffect: 'paramId' from useParams:", paramId);
@@ -154,11 +161,23 @@ const ShipmentDetails = () => {
            shipment?.distributorData?.destinationRetailerId === user.fullId;
   };
 
-  const canUserCertify = () => { /* ... same ... */ 
+  const canUserCertify = () => { /* ... same ... */
     if (shipment && user) {
         console.log("ShipmentDetails canUserCertify Check: user.role:", user.role, "shipment.status:", shipment.status);
     }
     return user?.role === 'certifier' && shipment?.status === 'PENDING_CERTIFICATION';
+  };
+
+  const canRecall = () => {
+    return (user?.is_admin || shipment?.currentOwnerAlias === user?.chaincode_alias) && shipment?.status !== 'RECALLED';
+  };
+
+  const canArchive = () => user?.is_admin && shipment?.status !== 'ARCHIVED';
+
+  const canUnarchive = () => user?.is_admin && shipment?.status === 'ARCHIVED';
+
+  const canTransform = () => {
+    return user?.role === 'processor' && shipment?.status === 'PROCESSED' && shipment?.currentOwnerAlias === user?.chaincode_alias;
   };
 
 
@@ -227,6 +246,10 @@ const ShipmentDetails = () => {
             {canDistribute() && ( <Button onClick={() => { console.log("Distribute btn clicked. ID:", effectiveShipmentId); setShowDistributeForm(true); }} className="bg-yellow-500 hover:bg-yellow-600 text-black"> Distribute Shipment </Button> )}
             {canReceive() && ( <Button onClick={() => { console.log("Receive btn clicked. ID:", effectiveShipmentId); setShowReceiveForm(true); }} className="bg-purple-600 hover:bg-purple-700"> Receive Shipment </Button> )}
             {canUserCertify() && ( <Button onClick={() => { console.log("Record Cert btn clicked. ID:", effectiveShipmentId); setShowCertificationForm(true); }} className="bg-green-600 hover:bg-green-700"> Record Certification </Button> )}
+            {canTransform() && ( <Button onClick={() => setShowTransformForm(true)} className="bg-purple-500 hover:bg-purple-600 text-white">Transform</Button> )}
+            {canRecall() && ( <Button onClick={() => setShowRecallForm(true)} className="bg-red-600 hover:bg-red-700">Recall</Button> )}
+            {canArchive() && ( <Button onClick={() => setShowArchiveForm(true)} className="bg-gray-700 text-white hover:bg-gray-800">Archive</Button> )}
+            {canUnarchive() && ( <Button onClick={async () => { if(effectiveShipmentId){setActionLoading(true);try{await apiClient.unarchiveShipment(effectiveShipmentId);toast({title:'Shipment unarchived'});if(paramId)loadShipmentDetails(paramId);}catch(err){toast({title:'Error',description:err instanceof Error?err.message:'Failed',variant:'destructive'});}finally{setActionLoading(false);}} }} className="bg-gray-500 text-white hover:bg-gray-600">Unarchive</Button> )}
           </div>
         </div>
 
@@ -235,6 +258,9 @@ const ShipmentDetails = () => {
         {showDistributeForm && effectiveShipmentId && ( <DistributeShipmentForm shipmentId={effectiveShipmentId} onSuccess={() => { setShowDistributeForm(false); if (paramId) loadShipmentDetails(paramId); }} onCancel={() => setShowDistributeForm(false)} /> )}
         {showReceiveForm && effectiveShipmentId && ( <ReceiveShipmentForm shipmentId={effectiveShipmentId} onSuccess={() => { setShowReceiveForm(false); if (paramId) loadShipmentDetails(paramId); }} onCancel={() => setShowReceiveForm(false)} /> )}
         {showCertificationForm && effectiveShipmentId && ( <RecordCertificationForm shipmentId={effectiveShipmentId} onSuccess={() => { setShowCertificationForm(false); if (paramId) loadShipmentDetails(paramId); }} onCancel={() => setShowCertificationForm(false)} /> )}
+        {showRecallForm && effectiveShipmentId && (<RecallForm shipmentId={effectiveShipmentId} onSuccess={() => { setShowRecallForm(false); if(paramId) loadShipmentDetails(paramId); }} onCancel={() => setShowRecallForm(false)} />)}
+        {showArchiveForm && effectiveShipmentId && (<ArchiveShipmentForm shipmentId={effectiveShipmentId} onSuccess={() => { setShowArchiveForm(false); if(paramId) loadShipmentDetails(paramId); }} onCancel={() => setShowArchiveForm(false)} />)}
+        {showTransformForm && effectiveShipmentId && (<TransformProductsForm shipmentId={effectiveShipmentId} onSuccess={() => { setShowTransformForm(false); if(paramId) loadShipmentDetails(paramId); }} onCancel={() => setShowTransformForm(false)} />)}
 
         {/* Timeline Card ... (no change) ... */}
         <Card>
@@ -343,7 +369,7 @@ const ShipmentDetails = () => {
                 <DetailItem label="Store ID" value={shipment.retailerData.storeId} />
                 <DetailItem label="Store Location" value={shipment.retailerData.storeLocation} />
                 <DetailItem label="Price" value={shipment.retailerData.price ? `$${Number(shipment.retailerData.price).toFixed(2)}` : undefined} />
-                <DetailItem label="QR Code Link" value={shipment.retailerData.qrCodeLink ? <a href={shipment.retailerData.qrCodeLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View QR</a> : undefined} />
+                <DetailItem label="QR Code" value={shipment.retailerData.qrCodeLink ? <QrCodeDisplay value={shipment.retailerData.qrCodeLink} /> : undefined} />
               </CardContent>
             </Card>
         )}

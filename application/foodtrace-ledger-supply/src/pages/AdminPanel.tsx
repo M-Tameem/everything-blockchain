@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AssignRoleForm from '@/components/AssignRoleForm';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -147,7 +148,7 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>User Management</span>
@@ -155,6 +156,10 @@ const AdminPanel = () => {
             <TabsTrigger value="create-user" className="flex items-center space-x-2">
               <UserPlus className="h-4 w-4" />
               <span>Create User</span>
+            </TabsTrigger>
+            <TabsTrigger value="assign-role" className="flex items-center space-x-2">
+              <UserPlus className="h-4 w-4" />
+              <span>Assign Role</span>
             </TabsTrigger>
             <TabsTrigger value="system" className="flex items-center space-x-2">
               <Settings className="h-4 w-4" />
@@ -312,6 +317,15 @@ const AdminPanel = () => {
                 </form>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Assign Role Tab */}
+          <TabsContent value="assign-role" className="space-y-6">
+            <AssignRoleForm
+              identities={identities}
+              onSuccess={() => loadIdentities()}
+              onCancel={() => {}}
+            />
           </TabsContent>
 
           {/* System Tab */}
