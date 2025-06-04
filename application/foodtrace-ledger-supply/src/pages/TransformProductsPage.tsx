@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useMyShipments } from '@/hooks/use-my-shipments';
 import { useAliases } from '@/hooks/use-aliases';
 import { apiClient } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface InputRow {
   shipmentId: string;
@@ -25,15 +25,12 @@ interface ProductRow {
 }
 
 const TransformProductsPage: React.FC = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const myShipments = useMyShipments();
   const distributorAliases = useAliases('distributor');
 
-  const consumable = myShipments.filter(s =>
-    ['PROCESSED', 'CERTIFIED', 'DELIVERED'].includes(String(s.status))
-  );
-
+  const [myShipments, setMyShipments] = useState<any[]>([]);
   const [inputs, setInputs] = useState<InputRow[]>([{ shipmentId: '' }]);
   const [products, setProducts] = useState<ProductRow[]>([{
     newShipmentId: '',
@@ -52,6 +49,45 @@ const TransformProductsPage: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+
+      console.log('🔄 TransformProductsPage load – current user role:', user.role);
+
+      try {
+        if (user.role === 'processor') {
+          const uInfo = await apiClient.getCurrentUserInfo();
+          console.log('📇 currentUserInfo', uInfo);
+
+          const allResp = await apiClient.getAllShipments(200); // fetch more than default 50
+          const all = allResp.shipments || [];
+          console.log(`📦 getAllShipments returned ${all.length} records`, all);
+
+          const filtered = all.filter(
+            s => ['CREATED', 'CERTIFIED', 'PENDING_CERTIFICATION'].includes(String(s.status)) &&
+                 (s.farmerData?.destinationProcessorId === uInfo.fullId ||
+                  s.farmerData?.destinationProcessorId === user.chaincode_alias)
+          );
+          console.log(`✅ After processor filter: ${filtered.length} records`, filtered);
+          setMyShipments(filtered);
+        } else {
+          const mineResp = await apiClient.getMyShipments(50);
+          const mine = mineResp.shipments || [];
+          console.log(`📦 getMyShipments returned ${mine.length} records`, mine);
+          setMyShipments(mine);
+        }
+      } catch (err) {
+        console.error('❌ Error loading shipments in TransformProductsPage:', err);
+      }
+    };
+
+    load();
+  }, [user]);
+
+  const consumable = myShipments;
+  console.log('🍏 consumable shipments (render):', consumable);
+
   const addInputRow = () => setInputs(prev => [...prev, { shipmentId: '' }]);
   const removeInputRow = (idx: number) => setInputs(prev => prev.filter((_,i)=>i!==idx));
   const updateInput = (idx: number, val: string) => setInputs(prev => prev.map((r,i)=>i===idx?{ shipmentId: val }:r));
@@ -63,6 +99,7 @@ const TransformProductsPage: React.FC = () => {
   const updateProc = (field: keyof typeof procData, val: string)=> setProcData(d=>({...d,[field]:val}));
 
   const fillWithDemoData = () => {
+    console.log('🧪 Fill with demo data clicked');
     if (consumable.length > 0) {
       setInputs([{ shipmentId: String(consumable[0].shipmentID || consumable[0].id) }]);
     }
@@ -83,6 +120,8 @@ const TransformProductsPage: React.FC = () => {
 
   const handleSubmit = async (e:React.FormEvent)=>{
     e.preventDefault();
+    console.log('🚀 Submit transform – selected inputs:', inputs, 'products:', products, 'procData:', procData);
+
     const selected = inputs.map(i=>i.shipmentId).filter(id=>id);
     if(selected.length===0){toast({title:'Select input shipments',variant:'destructive'});return;}
     const output = products.filter(p=>p.productName && p.quantity);
@@ -107,10 +146,12 @@ const TransformProductsPage: React.FC = () => {
         qualityCertifications: [],
         destinationDistributorId: procData.destinationDistributorId.trim()
       };
+      console.log('📤 Calling transformProducts with:', {inputConsumption, newProducts, payloadProc});
       await apiClient.transformProducts(inputConsumption,newProducts,payloadProc);
       toast({title:'Transformation complete'});
       navigate('/dashboard');
     }catch(err:any){
+      console.error('❌ transformProducts error', err);
       toast({title:'Error', description: err?.message || 'Failed', variant:'destructive'});
     }finally{
       setLoading(false);
