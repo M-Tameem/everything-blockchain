@@ -12,6 +12,14 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const corsOptions = {
+  origin: ['http://localhost:3000', 'http://localhost:8080', 'http://localhost:3001'], // include all frontend origins
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight OPTIONS requests
+
 // Security middleware
 app.use(helmet());
 
@@ -25,15 +33,6 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
-
-const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:8080', 'http://localhost:3001'], // include all frontend origins
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle preflight OPTIONS requests
-
 
 // Body parsing middleware
 app.use(express.json({ limit: '50mb' }));
