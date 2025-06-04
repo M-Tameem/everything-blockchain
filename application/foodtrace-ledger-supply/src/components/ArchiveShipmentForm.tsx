@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { Package, X } from 'lucide-react';
+import { Package, X, TestTubeDiagonal } from 'lucide-react';
 
 interface ArchiveShipmentFormProps {
   shipmentId: string;
@@ -17,6 +17,11 @@ const ArchiveShipmentForm: React.FC<ArchiveShipmentFormProps> = ({ shipmentId, o
   const { toast } = useToast();
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const fillWithDemoData = () => {
+    setReason('Demo archive - obsolete data');
+    toast({ title: 'Demo data loaded' });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +49,10 @@ const ArchiveShipmentForm: React.FC<ArchiveShipmentFormProps> = ({ shipmentId, o
           <span>Archive Shipment</span>
         </CardTitle>
         <CardDescription>Provide a reason for archiving.</CardDescription>
+        <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+          <TestTubeDiagonal className="h-4 w-4 mr-2" />
+          Fill with Demo Data
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

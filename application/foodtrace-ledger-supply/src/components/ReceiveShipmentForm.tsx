@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { Building, X } from 'lucide-react';
+import { Building, X, TestTubeDiagonal } from 'lucide-react';
 
 interface ReceiveShipmentFormProps {
   shipmentId: string;
@@ -35,6 +35,27 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const fillWithDemoData = () => {
+    const now = new Date();
+    const sellBy = new Date(now);
+    sellBy.setDate(now.getDate() + 7);
+    const expiry = new Date(now);
+    expiry.setDate(now.getDate() + 10);
+    setFormData({
+      dateReceived: now.toISOString().slice(0,16),
+      retailerLineId: 'RETL_DEMO_1',
+      productNameRetail: 'Demo Retail Product',
+      shelfLife: '7 days',
+      sellByDate: sellBy.toISOString().slice(0,10),
+      retailerExpiryDate: expiry.toISOString().slice(0,10),
+      storeId: 'STORE_DEMO_1',
+      storeLocation: 'Demo City',
+      price: '9.99',
+      qrCodeLink: 'https://demo.example.com/track'
+    });
+    toast({ title: 'Demo data loaded' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,6 +159,10 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
         <CardDescription>
           Enter retail information for the received shipment. All fields marked with * are required.
         </CardDescription>
+        <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+          <TestTubeDiagonal className="h-4 w-4 mr-2" />
+          Fill with Demo Data
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

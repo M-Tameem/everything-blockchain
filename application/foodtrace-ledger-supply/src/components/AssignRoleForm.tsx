@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
-import { X, UserPlus } from 'lucide-react';
+import { X, UserPlus, TestTubeDiagonal } from 'lucide-react';
 
 interface AssignRoleFormProps {
   identities: any[];
@@ -18,6 +18,14 @@ const AssignRoleForm: React.FC<AssignRoleFormProps> = ({ identities, onSuccess, 
   const [alias, setAlias] = useState('');
   const [role, setRole] = useState('farmer');
   const [loading, setLoading] = useState(false);
+
+  const fillWithDemoData = () => {
+    if (identities.length > 0) {
+      setAlias(identities[0].enrollmentID || identities[0].alias);
+    }
+    setRole('farmer');
+    toast({ title: 'Demo data loaded' });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +50,10 @@ const AssignRoleForm: React.FC<AssignRoleFormProps> = ({ identities, onSuccess, 
           <span>Assign Role</span>
         </CardTitle>
         <CardDescription>Select an identity and role</CardDescription>
+        <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+          <TestTubeDiagonal className="h-4 w-4 mr-2" />
+          Fill with Demo Data
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

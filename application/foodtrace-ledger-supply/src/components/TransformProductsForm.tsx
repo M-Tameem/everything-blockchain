@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/services/api';
 import { useAliases } from '@/hooks/use-aliases';
-import { ArrowRight, X } from 'lucide-react';
+import { ArrowRight, X, TestTubeDiagonal } from 'lucide-react';
 
 interface TransformProductsFormProps {
   shipmentId: string;
@@ -36,6 +36,26 @@ const TransformProductsForm: React.FC<TransformProductsFormProps> = ({ shipmentI
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const fillWithDemoData = () => {
+    const now = new Date();
+    const exp = new Date();
+    exp.setDate(now.getDate() + 365);
+    setFormData({
+      newShipmentId: '',
+      productName: 'Demo Derived Product',
+      description: 'Sample transformed goods',
+      quantity: '25',
+      unitOfMeasure: 'kg',
+      processingType: 'Demo Transformation',
+      processingLineId: 'LINE_DEMO_2',
+      dateProcessed: now.toISOString().slice(0,16),
+      outputBatchId: 'DEMO_OUT_001',
+      expiryDate: exp.toISOString().slice(0,10),
+      destinationDistributorId: distributorAliases[0] || ''
+    });
+    toast({ title: 'Demo data loaded' });
   };
 
   const generateShipmentId = () => {
@@ -90,6 +110,10 @@ const TransformProductsForm: React.FC<TransformProductsFormProps> = ({ shipmentI
           <span>Transform &amp; Create Product</span>
         </CardTitle>
         <CardDescription>Consume this shipment and create a new product</CardDescription>
+        <Button type="button" variant="outline" onClick={fillWithDemoData} className="mt-2 text-sm">
+          <TestTubeDiagonal className="h-4 w-4 mr-2" />
+          Fill with Demo Data
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
