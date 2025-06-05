@@ -43,6 +43,7 @@ const TransformProductsPage: React.FC = () => {
     processingType: '',
     processingLineId: '',
     dateProcessed: '',
+    contaminationCheck: 'PASSED',
     outputBatchId: '',
     expiryDate: '',
     destinationDistributorId: ''
@@ -111,6 +112,7 @@ const TransformProductsPage: React.FC = () => {
       processingType: 'Blending',
       processingLineId: 'LINE_DEMO',
       dateProcessed: now.toISOString().slice(0,16),
+      contaminationCheck: 'PASSED',
       outputBatchId: 'BATCH_DEMO',
       expiryDate: expiry.toISOString().slice(0,10),
       destinationDistributorId: distributorAliases[0] || ''
@@ -124,11 +126,16 @@ const TransformProductsPage: React.FC = () => {
 
     const selected = inputs.map(i=>i.shipmentId).filter(id=>id);
     if(selected.length===0){toast({title:'Select input shipments',variant:'destructive'});return;}
+    const uniqueSelected = Array.from(new Set(selected));
+    if(uniqueSelected.length!==selected.length){
+      toast({title:'Duplicate shipments not allowed',variant:'destructive'});
+      return;
+    }
     const output = products.filter(p=>p.productName && p.quantity);
     if(output.length===0){toast({title:'Add at least one product',variant:'destructive'});return;}
     setLoading(true);
     try{
-      const inputConsumption = selected.map(id=>({ shipmentId:id }));
+      const inputConsumption = uniqueSelected.map(id=>({ shipmentId:id }));
       const newProducts = output.map(p=>({
         newShipmentId: p.newShipmentId || `SHIP-${Date.now()}-${Math.random().toString(36).substring(2,5).toUpperCase()}`,
         productName: p.productName.trim(),
@@ -140,12 +147,24 @@ const TransformProductsPage: React.FC = () => {
         processingType: procData.processingType.trim(),
         processingLineId: procData.processingLineId.trim(),
         dateProcessed: procData.dateProcessed ? new Date(procData.dateProcessed).toISOString() : new Date().toISOString(),
+        contaminationCheck: procData.contaminationCheck.trim() || 'PASSED',
         outputBatchId: procData.outputBatchId.trim(),
         expiryDate: procData.expiryDate ? new Date(procData.expiryDate+ 'T00:00:00Z').toISOString() : '',
         processingLocation: 'Transformation Plant',
         qualityCertifications: [],
         destinationDistributorId: procData.destinationDistributorId.trim()
       };
+
+      // Ensure processor owns inputs by processing them first
+      for (const id of uniqueSelected) {
+        try {
+          await apiClient.processShipment(id, payloadProc);
+          console.log(`✅ Shipment ${id} processed for transformation.`);
+        } catch (err) {
+          console.warn(`⚠️ ProcessShipment failed for ${id}:`, err);
+        }
+      }
+
       console.log('📤 Calling transformProducts with:', {inputConsumption, newProducts, payloadProc});
       await apiClient.transformProducts(inputConsumption,newProducts,payloadProc);
       toast({title:'Transformation complete'});
@@ -184,7 +203,15 @@ const TransformProductsPage: React.FC = () => {
                               No available shipments
                             </div>
                           ) : (
-                            consumable.map(s => (
+                            consumable
+                              .filter(opt => {
+                                const others = inputs
+                                  .filter((_, i) => i !== idx)
+                                  .map(i => i.shipmentId)
+                                  .filter(Boolean);
+                                return !others.includes(String(opt.shipmentID || opt.id));
+                              })
+                              .map(s => (
                               <SelectItem
                                 key={s.shipmentID || s.id}
                                 value={String(s.shipmentID || s.id)}
@@ -254,6 +281,16 @@ const TransformProductsPage: React.FC = () => {
                 <div>
                   <Label>Date Processed</Label>
                   <Input type="datetime-local" value={procData.dateProcessed} onChange={e=>updateProc('dateProcessed',e.target.value)} />
+                </div>
+                <div>
+                  <Label>Contamination Check</Label>
+                  <Select value={procData.contaminationCheck} onValueChange={val=>updateProc('contaminationCheck', val)}>
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PASSED">Passed</SelectItem>
+                      <SelectItem value="FAILED">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Output Batch ID</Label>
