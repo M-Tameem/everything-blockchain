@@ -323,6 +323,12 @@ const PublicTracker = () => {
                       <label className="text-sm font-medium text-gray-500">Location</label>
                       <p className="text-gray-900 mt-1">{shipment.farmerData.farmLocation}</p>
                     </div>
+                    {shipment.farmerData.farmCoordinates && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">GPS</label>
+                        <p className="text-gray-900 mt-1">{shipment.farmerData.farmCoordinates.latitude}, {shipment.farmerData.farmCoordinates.longitude}</p>
+                      </div>
+                    )}
                     <div>
                       <label className="text-sm font-medium text-gray-500">Farming Practice</label>
                       <Badge variant="secondary" className="mt-1">
@@ -423,6 +429,14 @@ const PublicTracker = () => {
                       <label className="text-sm font-medium text-gray-500">Vehicle ID</label>
                       <p className="text-gray-900 mt-1">{shipment.distributorData.distributionLineId}</p>
                     </div>
+                    {shipment.distributorData.transitGpsLog && shipment.distributorData.transitGpsLog.length > 0 && (
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium text-gray-500">GPS Log</label>
+                        <p className="text-gray-900 mt-1 break-words">
+                          {shipment.distributorData.transitGpsLog.map(g => `${g.latitude},${g.longitude}`).join(' | ')}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

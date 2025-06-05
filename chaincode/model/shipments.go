@@ -27,12 +27,19 @@ const (
 	CertStatusRejected CertificationStatus = "REJECTED"
 )
 
+// GeoPoint represents a latitude/longitude coordinate.
+type GeoPoint struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
 // FarmerData holds information specific to the farming stage.
 type FarmerData struct {
 	FarmerID                  string    `json:"farmerId"`
 	FarmerName                string    `json:"farmerName"`
 	FarmerAlias               string    `json:"farmerAlias"`
 	FarmLocation              string    `json:"farmLocation"`
+	FarmCoordinates           *GeoPoint `json:"farmCoordinates"`
 	CropType                  string    `json:"cropType"`
 	PlantingDate              time.Time `json:"plantingDate"`
 	FertilizerUsed            string    `json:"fertilizerUsed"`
@@ -72,17 +79,18 @@ type CertificationRecord struct {
 
 // DistributorData holds information specific to the distribution stage.
 type DistributorData struct {
-	DistributorID         string    `json:"distributorId"`
-	DistributorAlias      string    `json:"distributorAlias"`
-	PickupDateTime        time.Time `json:"pickupDateTime"`
-	DeliveryDateTime      time.Time `json:"deliveryDateTime"`
-	DistributionLineID    string    `json:"distributionLineId"`
-	TemperatureRange      string    `json:"temperatureRange"`
-	StorageTemperature    float64   `json:"storageTemperature"`
-	TransitLocationLog    []string  `json:"transitLocationLog"`
-	TransportConditions   string    `json:"transportConditions"`
-	DistributionCenter    string    `json:"distributionCenter"`
-	DestinationRetailerID string    `json:"destinationRetailerId"`
+	DistributorID         string     `json:"distributorId"`
+	DistributorAlias      string     `json:"distributorAlias"`
+	PickupDateTime        time.Time  `json:"pickupDateTime"`
+	DeliveryDateTime      time.Time  `json:"deliveryDateTime"`
+	DistributionLineID    string     `json:"distributionLineId"`
+	TemperatureRange      string     `json:"temperatureRange"`
+	StorageTemperature    float64    `json:"storageTemperature"`
+	TransitLocationLog    []string   `json:"transitLocationLog"`
+	TransitGPSLog         []GeoPoint `json:"transitGpsLog"`
+	TransportConditions   string     `json:"transportConditions"`
+	DistributionCenter    string     `json:"distributionCenter"`
+	DestinationRetailerID string     `json:"destinationRetailerId"`
 }
 
 // RetailerData holds information specific to the retail stage.
@@ -127,7 +135,7 @@ type Shipment struct {
 	LastUpdatedAt        time.Time             `json:"lastUpdatedAt"`
 	IsArchived           bool                  `json:"isArchived"`
 	InputShipmentIDs     []string              `json:"inputShipmentIds"` // IDs of shipments consumed to create this one
-	IsDerivedProduct     bool                  `json:"isDerivedProduct"`           // True if this shipment was created from other input shipments
+	IsDerivedProduct     bool                  `json:"isDerivedProduct"` // True if this shipment was created from other input shipments
 	FarmerData           *FarmerData           `json:"farmerData"`
 	CertificationRecords []CertificationRecord `json:"certificationRecords"`
 	ProcessorData        *ProcessorData        `json:"processorData"`
@@ -142,7 +150,7 @@ type HistoryEntry struct {
 	TxID       string    `json:"txId"`
 	Timestamp  time.Time `json:"timestamp"`
 	IsDelete   bool      `json:"isDelete"`
-	Value      string    `json:"value"`                // Raw JSON value of the asset at that time
+	Value      string    `json:"value"`      // Raw JSON value of the asset at that time
 	ActorID    string    `json:"actorId"`    // Best guess of the actor based on CurrentOwnerID at the time
 	ActorAlias string    `json:"actorAlias"` // Best guess of the actor's alias
 	Action     string    `json:"action"`     // Description of the action (e.g., status change)
@@ -158,8 +166,8 @@ type RelatedShipmentInfo struct {
 	RelationReason    string         `json:"relationReason"`
 	ActorID           string         `json:"actorId"` // ID of the actor involved in the related event (e.g., processor)
 	ActorAlias        string         `json:"actorAlias"`
-	LineID            string         `json:"lineId"` // e.g., processingLineId or distributionLineId
-	EventTimestamp    time.Time      `json:"eventTimestamp"`   // Timestamp of the relating event (e.g., DateProcessed)
+	LineID            string         `json:"lineId"`         // e.g., processingLineId or distributionLineId
+	EventTimestamp    time.Time      `json:"eventTimestamp"` // Timestamp of the relating event (e.g., DateProcessed)
 }
 
 // InputShipmentConsumptionDetail defines the ID of an input shipment to be fully consumed.

@@ -313,6 +313,9 @@ const ShipmentDetails = () => {
               <CardContent className="space-y-3">
                 <DetailItem label="Farm Name" value={shipment.farmerData.farmerName} />
                 <DetailItem label="Location" value={shipment.farmerData.farmLocation} />
+                {shipment.farmerData.farmCoordinates && (
+                  <DetailItem label="GPS" value={`${shipment.farmerData.farmCoordinates.latitude}, ${shipment.farmerData.farmCoordinates.longitude}`} />
+                )}
                 <DetailItem label="Crop Type" value={shipment.farmerData.cropType} />
                 <DetailItem label="Farming Practice" value={shipment.farmerData.farmingPractice} />
                 <DetailItem label="Planting Date" value={formatDate(shipment.farmerData.plantingDate)} />
@@ -353,6 +356,9 @@ const ShipmentDetails = () => {
                 <DetailItem label="Transport Conditions" value={shipment.distributorData.transportConditions} />
                 <DetailItem label="Distribution Center" value={shipment.distributorData.distributionCenter} />
                 <DetailItem label="Transit Log" value={Array.isArray(shipment.distributorData.transitLocationLog) ? shipment.distributorData.transitLocationLog.join(', ') : shipment.distributorData.transitLocationLog} />
+                {shipment.distributorData.transitGpsLog && shipment.distributorData.transitGpsLog.length > 0 && (
+                  <DetailItem label="GPS Log" value={shipment.distributorData.transitGpsLog.map(g => `${g.latitude},${g.longitude}`).join(' | ')} />
+                )}
                 <DetailItem label="Destination Retailer ID" value={shipment.distributorData.destinationRetailerId} />
               </CardContent>
             </Card>

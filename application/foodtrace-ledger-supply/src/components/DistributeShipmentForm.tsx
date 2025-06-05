@@ -33,6 +33,7 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
     distributionCenter: '',
     distributionLineId: '',
     transitLocationLog: '',
+    transitGpsLog: '',
     destinationRetailerId: ''
   });
 
@@ -52,6 +53,7 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
       distributionCenter: 'Demo DC',
       distributionLineId: 'TRUCK_DEMO_1',
       transitLocationLog: 'Warehouse A, Hub B',
+      transitGpsLog: '37.1,-122.1\n37.2,-122.2',
       destinationRetailerId: retailerAliases[0] || ''
     });
     toast({ title: 'Demo data loaded' });
@@ -102,6 +104,17 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
       const transitLocationLogArray = formData.transitLocationLog.trim()
         ? formData.transitLocationLog.split(',').map(location => location.trim()).filter(location => location)
         : [];
+      const transitGpsLogArray = formData.transitGpsLog.trim()
+        ? formData.transitGpsLog.split('\n').map(line => {
+            const [lat, lng] = line.split(',').map(s => s.trim());
+            const latNum = parseFloat(lat);
+            const lngNum = parseFloat(lng);
+            if (!isNaN(latNum) && !isNaN(lngNum)) {
+              return { latitude: latNum, longitude: lngNum };
+            }
+            return null;
+          }).filter(Boolean) as { latitude: number; longitude: number }[]
+        : [];
 
       const payloadForApi = {
         pickupDateTime: pickupDateTimeISO,
@@ -112,6 +125,7 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
         distributionCenter: formData.distributionCenter.trim(),
         distributionLineId: formData.distributionLineId.trim(),
         transitLocationLog: transitLocationLogArray,
+        transitGpsLog: transitGpsLogArray,
         destinationRetailerId: formData.destinationRetailerId.trim()
       };
 
@@ -242,6 +256,16 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
               value={formData.transitLocationLog}
               onChange={(e) => handleInputChange('transitLocationLog', e.target.value)}
               placeholder="e.g., Warehouse A, Transit Hub B, Distribution Center C"
+              rows={2}
+            />
+          </div>
+          <div>
+            <Label htmlFor="transitGpsLog">Transit GPS Log (lat,lng per line)</Label>
+            <Textarea
+              id="transitGpsLog"
+              value={formData.transitGpsLog}
+              onChange={(e) => handleInputChange('transitGpsLog', e.target.value)}
+              placeholder="37.1,-122.1\n37.2,-122.2"
               rows={2}
             />
           </div>

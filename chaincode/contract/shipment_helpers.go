@@ -119,6 +119,37 @@ func (s *FoodtraceSmartContract) validateStringArray(arr []string, field string,
 	return nil
 }
 
+func (s *FoodtraceSmartContract) validateGeoPoint(gp *model.GeoPoint, field string, required bool) error {
+	if gp == nil {
+		if required {
+			return fmt.Errorf("%s is required", field)
+		}
+		return nil
+	}
+	if gp.Latitude < -90 || gp.Latitude > 90 {
+		return fmt.Errorf("%s.latitude must be between -90 and 90", field)
+	}
+	if gp.Longitude < -180 || gp.Longitude > 180 {
+		return fmt.Errorf("%s.longitude must be between -180 and 180", field)
+	}
+	return nil
+}
+
+func (s *FoodtraceSmartContract) validateGeoPointArray(gps []model.GeoPoint, field string, maxItems int) error {
+	if gps == nil {
+		return nil
+	}
+	if len(gps) > maxItems {
+		return fmt.Errorf("%s has %d items, exceeding maximum of %d", field, len(gps), maxItems)
+	}
+	for i := range gps {
+		if err := s.validateGeoPoint(&gps[i], fmt.Sprintf("%s[%d]", field, i), false); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func parseDateString(str, field string, required bool) (time.Time, error) {
 	sTrimmed := strings.TrimSpace(str)
 	if sTrimmed == "" {
@@ -136,9 +167,10 @@ func parseDateString(str, field string, required bool) (time.Time, error) {
 
 // Specific data args validators
 type ValidatedFarmerData struct { // To return parsed dates
-	FarmerName                string `json:"farmerName"`
-	FarmLocation              string `json:"farmLocation"`
-	CropType                  string `json:"cropType"`
+	FarmerName                string          `json:"farmerName"`
+	FarmLocation              string          `json:"farmLocation"`
+	FarmCoordinates           *model.GeoPoint `json:"farmCoordinates"`
+	CropType                  string          `json:"cropType"`
 	PlantingDate              time.Time
 	FertilizerUsed            string `json:"fertilizerUsed"`
 	CertificationDocumentHash string `json:"certificationDocumentHash"`
@@ -149,15 +181,16 @@ type ValidatedFarmerData struct { // To return parsed dates
 
 func (s *FoodtraceSmartContract) validateFarmerDataArgs(farmerDataJSON string) (*ValidatedFarmerData, error) {
 	var fdArg struct { // Temporary struct for unmarshalling string dates
-		FarmerName                string `json:"farmerName"`
-		FarmLocation              string `json:"farmLocation"`
-		CropType                  string `json:"cropType"`
-		PlantingDateStr           string `json:"plantingDate"`
-		FertilizerUsed            string `json:"fertilizerUsed"`
-		CertificationDocumentHash string `json:"certificationDocumentHash"`
-		HarvestDateStr            string `json:"harvestDate"`
-		FarmingPractice           string `json:"farmingPractice"`
-		DestinationProcessorID    string `json:"destinationProcessorId"`
+		FarmerName                string          `json:"farmerName"`
+		FarmLocation              string          `json:"farmLocation"`
+		FarmCoordinates           *model.GeoPoint `json:"farmCoordinates"`
+		CropType                  string          `json:"cropType"`
+		PlantingDateStr           string          `json:"plantingDate"`
+		FertilizerUsed            string          `json:"fertilizerUsed"`
+		CertificationDocumentHash string          `json:"certificationDocumentHash"`
+		HarvestDateStr            string          `json:"harvestDate"`
+		FarmingPractice           string          `json:"farmingPractice"`
+		DestinationProcessorID    string          `json:"destinationProcessorId"`
 	}
 	if err := json.Unmarshal([]byte(farmerDataJSON), &fdArg); err != nil {
 		return nil, fmt.Errorf("invalid farmerDataJSON: %w. Ensure the JSON structure and all required fields are correct", err)
@@ -167,6 +200,9 @@ func (s *FoodtraceSmartContract) validateFarmerDataArgs(farmerDataJSON string) (
 		return nil, err
 	}
 	if err := s.validateRequiredString(fdArg.FarmLocation, "farmerData.farmLocation", maxStringInputLength); err != nil {
+		return nil, err
+	}
+	if err := s.validateGeoPoint(fdArg.FarmCoordinates, "farmerData.farmCoordinates", true); err != nil {
 		return nil, err
 	}
 	if err := s.validateRequiredString(fdArg.CropType, "farmerData.cropType", maxStringInputLength); err != nil {
@@ -194,9 +230,16 @@ func (s *FoodtraceSmartContract) validateFarmerDataArgs(farmerDataJSON string) (
 	} // Full IDs can be long
 
 	return &ValidatedFarmerData{
-		FarmerName: fdArg.FarmerName, FarmLocation: fdArg.FarmLocation, CropType: fdArg.CropType, PlantingDate: plantingDate,
-		FertilizerUsed: fdArg.FertilizerUsed, CertificationDocumentHash: fdArg.CertificationDocumentHash, HarvestDate: harvestDate,
-		FarmingPractice: fdArg.FarmingPractice, DestinationProcessorID: fdArg.DestinationProcessorID,
+		FarmerName:                fdArg.FarmerName,
+		FarmLocation:              fdArg.FarmLocation,
+		FarmCoordinates:           fdArg.FarmCoordinates,
+		CropType:                  fdArg.CropType,
+		PlantingDate:              plantingDate,
+		FertilizerUsed:            fdArg.FertilizerUsed,
+		CertificationDocumentHash: fdArg.CertificationDocumentHash,
+		HarvestDate:               harvestDate,
+		FarmingPractice:           fdArg.FarmingPractice,
+		DestinationProcessorID:    fdArg.DestinationProcessorID,
 	}, nil
 }
 
@@ -256,15 +299,16 @@ func (s *FoodtraceSmartContract) validateProcessorDataArgs(pdJSON string) (*mode
 // FIXED: Complete validation for distributor data
 func (s *FoodtraceSmartContract) validateDistributorDataArgs(ddJSON string) (*model.DistributorData, error) {
 	var ddArgRaw struct {
-		PickupDateTimeStr     string   `json:"pickupDateTime"`
-		DeliveryDateTimeStr   string   `json:"deliveryDateTime"`
-		DistributionLineID    string   `json:"distributionLineId"`
-		TemperatureRange      string   `json:"temperatureRange"`
-		StorageTemperature    *float64 `json:"storageTemperature"`
-		TransitLocationLog    []string `json:"transitLocationLog"`
-		TransportConditions   string   `json:"transportConditions"`
-		DistributionCenter    string   `json:"distributionCenter"`
-		DestinationRetailerID string   `json:"destinationRetailerId"`
+		PickupDateTimeStr     string           `json:"pickupDateTime"`
+		DeliveryDateTimeStr   string           `json:"deliveryDateTime"`
+		DistributionLineID    string           `json:"distributionLineId"`
+		TemperatureRange      string           `json:"temperatureRange"`
+		StorageTemperature    *float64         `json:"storageTemperature"`
+		TransitLocationLog    []string         `json:"transitLocationLog"`
+		TransitGPSLog         []model.GeoPoint `json:"transitGpsLog"`
+		TransportConditions   string           `json:"transportConditions"`
+		DistributionCenter    string           `json:"distributionCenter"`
+		DestinationRetailerID string           `json:"destinationRetailerId"`
 	}
 	if err := json.Unmarshal([]byte(ddJSON), &ddArgRaw); err != nil {
 		return nil, fmt.Errorf("invalid distributorDataJSON: %w", err)
@@ -289,6 +333,9 @@ func (s *FoodtraceSmartContract) validateDistributorDataArgs(ddJSON string) (*mo
 	if err := s.validateStringArray(ddArgRaw.TransitLocationLog, "distributorData.transitLocationLog", maxArrayElements, maxDescriptionLength); err != nil {
 		return nil, err
 	}
+	if err := s.validateGeoPointArray(ddArgRaw.TransitGPSLog, "distributorData.transitGpsLog", maxArrayElements); err != nil {
+		return nil, err
+	}
 	if err := s.validateOptionalString(ddArgRaw.TransportConditions, "distributorData.transportConditions", maxDescriptionLength); err != nil {
 		return nil, err
 	}
@@ -305,9 +352,16 @@ func (s *FoodtraceSmartContract) validateDistributorDataArgs(ddJSON string) (*mo
 	}
 
 	return &model.DistributorData{
-		PickupDateTime: pickupDateTime, DeliveryDateTime: deliveryDateTime, DistributionLineID: ddArgRaw.DistributionLineID,
-		TemperatureRange: ddArgRaw.TemperatureRange, StorageTemperature: storageTempValue, TransitLocationLog: ddArgRaw.TransitLocationLog,
-		TransportConditions: ddArgRaw.TransportConditions, DistributionCenter: ddArgRaw.DistributionCenter, DestinationRetailerID: ddArgRaw.DestinationRetailerID,
+		PickupDateTime:        pickupDateTime,
+		DeliveryDateTime:      deliveryDateTime,
+		DistributionLineID:    ddArgRaw.DistributionLineID,
+		TemperatureRange:      ddArgRaw.TemperatureRange,
+		StorageTemperature:    storageTempValue,
+		TransitLocationLog:    ddArgRaw.TransitLocationLog,
+		TransitGPSLog:         ddArgRaw.TransitGPSLog,
+		TransportConditions:   ddArgRaw.TransportConditions,
+		DistributionCenter:    ddArgRaw.DistributionCenter,
+		DestinationRetailerID: ddArgRaw.DestinationRetailerID,
 	}, nil
 }
 
@@ -417,11 +471,15 @@ func ensureShipmentSchemaCompliance(shipment *model.Shipment) {
 	if shipment.DistributorData == nil {
 		shipment.DistributorData = &model.DistributorData{
 			TransitLocationLog: []string{}, // FIXED: Initialize as empty slice
+			TransitGPSLog:      []model.GeoPoint{},
 		}
 	} else {
 		// Ensure nested slice is not nil
 		if shipment.DistributorData.TransitLocationLog == nil {
 			shipment.DistributorData.TransitLocationLog = []string{}
+		}
+		if shipment.DistributorData.TransitGPSLog == nil {
+			shipment.DistributorData.TransitGPSLog = []model.GeoPoint{}
 		}
 	}
 
