@@ -314,6 +314,8 @@ const ShipmentDetails = () => {
               <CardContent>
                 <ShipmentMapView
                   farmLocation={shipment.farmerData?.farmCoordinates}
+                  processorLocation={shipment.processorData?.processingCoordinates}
+                  retailerLocation={shipment.retailerData?.storeCoordinates}
                   route={shipment.distributorData?.transitGpsLog}
                 />
               </CardContent>

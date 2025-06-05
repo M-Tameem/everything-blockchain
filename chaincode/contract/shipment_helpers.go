@@ -245,15 +245,16 @@ func (s *FoodtraceSmartContract) validateFarmerDataArgs(farmerDataJSON string) (
 
 func (s *FoodtraceSmartContract) validateProcessorDataArgs(pdJSON string) (*model.ProcessorData, error) {
 	var pdArgRaw struct { // Use raw struct for unmarshalling string dates
-		DateProcessedStr         string   `json:"dateProcessed"`
-		ProcessingType           string   `json:"processingType"`
-		ProcessingLineID         string   `json:"processingLineId"`
-		ProcessingLocation       string   `json:"processingLocation"`
-		ContaminationCheck       string   `json:"contaminationCheck"`
-		OutputBatchID            string   `json:"outputBatchId"`
-		ExpiryDateStr            string   `json:"expiryDate"`
-		QualityCertifications    []string `json:"qualityCertifications"`
-		DestinationDistributorID string   `json:"destinationDistributorId"`
+		DateProcessedStr         string          `json:"dateProcessed"`
+		ProcessingType           string          `json:"processingType"`
+		ProcessingLineID         string          `json:"processingLineId"`
+		ProcessingLocation       string          `json:"processingLocation"`
+		ProcessingCoordinates    *model.GeoPoint `json:"processingCoordinates"`
+		ContaminationCheck       string          `json:"contaminationCheck"`
+		OutputBatchID            string          `json:"outputBatchId"`
+		ExpiryDateStr            string          `json:"expiryDate"`
+		QualityCertifications    []string        `json:"qualityCertifications"`
+		DestinationDistributorID string          `json:"destinationDistributorId"`
 	}
 	if err := json.Unmarshal([]byte(pdJSON), &pdArgRaw); err != nil {
 		return nil, fmt.Errorf("invalid processorDataJSON: %w", err)
@@ -270,6 +271,9 @@ func (s *FoodtraceSmartContract) validateProcessorDataArgs(pdJSON string) (*mode
 		return nil, err
 	}
 	if err := s.validateRequiredString(pdArgRaw.ProcessingLocation, "processorData.processingLocation", maxStringInputLength); err != nil {
+		return nil, err
+	}
+	if err := s.validateGeoPoint(pdArgRaw.ProcessingCoordinates, "processorData.processingCoordinates", true); err != nil {
 		return nil, err
 	}
 	if err := s.validateRequiredString(pdArgRaw.ContaminationCheck, "processorData.contaminationCheck", maxStringInputLength); err != nil {
@@ -291,7 +295,8 @@ func (s *FoodtraceSmartContract) validateProcessorDataArgs(pdJSON string) (*mode
 
 	return &model.ProcessorData{ // Return model.ProcessorData with parsed dates
 		DateProcessed: dateProcessed, ProcessingType: pdArgRaw.ProcessingType, ProcessingLineID: pdArgRaw.ProcessingLineID,
-		ProcessingLocation: pdArgRaw.ProcessingLocation, ContaminationCheck: pdArgRaw.ContaminationCheck, OutputBatchID: pdArgRaw.OutputBatchID,
+		ProcessingLocation: pdArgRaw.ProcessingLocation, ProcessingCoordinates: pdArgRaw.ProcessingCoordinates,
+		ContaminationCheck: pdArgRaw.ContaminationCheck, OutputBatchID: pdArgRaw.OutputBatchID,
 		ExpiryDate: expiryDate, QualityCertifications: pdArgRaw.QualityCertifications, DestinationDistributorID: pdArgRaw.DestinationDistributorID,
 	}, nil
 }
@@ -368,16 +373,17 @@ func (s *FoodtraceSmartContract) validateDistributorDataArgs(ddJSON string) (*mo
 // FIXED: Complete validation for retailer data
 func (s *FoodtraceSmartContract) validateRetailerDataArgs(rdJSON string) (*model.RetailerData, error) {
 	var rdArgRaw struct {
-		DateReceivedStr       string   `json:"dateReceived"`
-		RetailerLineID        string   `json:"retailerLineId"`
-		ProductNameRetail     string   `json:"productNameRetail"`
-		ShelfLife             string   `json:"shelfLife"`
-		SellByDateStr         string   `json:"sellByDate"`
-		RetailerExpiryDateStr string   `json:"retailerExpiryDate"`
-		StoreID               string   `json:"storeId"`
-		StoreLocation         string   `json:"storeLocation"`
-		Price                 *float64 `json:"price"`
-		QRCodeLink            string   `json:"qrCodeLink"`
+		DateReceivedStr       string          `json:"dateReceived"`
+		RetailerLineID        string          `json:"retailerLineId"`
+		ProductNameRetail     string          `json:"productNameRetail"`
+		ShelfLife             string          `json:"shelfLife"`
+		SellByDateStr         string          `json:"sellByDate"`
+		RetailerExpiryDateStr string          `json:"retailerExpiryDate"`
+		StoreID               string          `json:"storeId"`
+		StoreLocation         string          `json:"storeLocation"`
+		StoreCoordinates      *model.GeoPoint `json:"storeCoordinates"`
+		Price                 *float64        `json:"price"`
+		QRCodeLink            string          `json:"qrCodeLink"`
 	}
 	if err := json.Unmarshal([]byte(rdJSON), &rdArgRaw); err != nil {
 		return nil, fmt.Errorf("invalid retailerDataJSON: %w", err)
@@ -412,6 +418,9 @@ func (s *FoodtraceSmartContract) validateRetailerDataArgs(rdJSON string) (*model
 	if err := s.validateRequiredString(rdArgRaw.StoreLocation, "retailerData.storeLocation", maxStringInputLength); err != nil {
 		return nil, err
 	}
+	if err := s.validateGeoPoint(rdArgRaw.StoreCoordinates, "retailerData.storeCoordinates", true); err != nil {
+		return nil, err
+	}
 	if err := s.validateOptionalString(rdArgRaw.QRCodeLink, "retailerData.qrCodeLink", maxStringInputLength*2); err != nil {
 		return nil, err
 	}
@@ -427,7 +436,7 @@ func (s *FoodtraceSmartContract) validateRetailerDataArgs(rdJSON string) (*model
 	return &model.RetailerData{
 		DateReceived: dateReceived, RetailerLineID: rdArgRaw.RetailerLineID, ProductNameRetail: rdArgRaw.ProductNameRetail,
 		ShelfLife: rdArgRaw.ShelfLife, SellByDate: sellByDate, RetailerExpiryDate: retailerExpiryDate,
-		StoreID: rdArgRaw.StoreID, StoreLocation: rdArgRaw.StoreLocation, Price: priceValue, QRCodeLink: rdArgRaw.QRCodeLink,
+		StoreID: rdArgRaw.StoreID, StoreLocation: rdArgRaw.StoreLocation, StoreCoordinates: rdArgRaw.StoreCoordinates, Price: priceValue, QRCodeLink: rdArgRaw.QRCodeLink,
 	}, nil
 }
 

@@ -58,6 +58,7 @@ type ProcessorData struct {
 	ProcessingType           string    `json:"processingType"`
 	ProcessingLineID         string    `json:"processingLineId"`
 	ProcessingLocation       string    `json:"processingLocation"`
+	ProcessingCoordinates    *GeoPoint `json:"processingCoordinates"`
 	ContaminationCheck       string    `json:"contaminationCheck"`
 	OutputBatchID            string    `json:"outputBatchId"` // For simple processing; for transformations, new Shipment.ID is used.
 	ExpiryDate               time.Time `json:"expiryDate"`
@@ -105,6 +106,7 @@ type RetailerData struct {
 	RetailerExpiryDate time.Time `json:"retailerExpiryDate"`
 	StoreID            string    `json:"storeId"`
 	StoreLocation      string    `json:"storeLocation"`
+	StoreCoordinates   *GeoPoint `json:"storeCoordinates"`
 	Price              float64   `json:"price"`
 	QRCodeLink         string    `json:"qrCodeLink"`
 }

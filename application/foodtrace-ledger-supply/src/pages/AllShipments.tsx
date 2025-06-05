@@ -112,7 +112,7 @@ const AllShipments = () => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
-      shipment.shipmentID?.toLowerCase().includes(searchLower) ||
+      (shipment.shipmentID || shipment.id)?.toLowerCase().includes(searchLower) ||
       shipment.productName?.toLowerCase().includes(searchLower) ||
       shipment.currentOwnerAlias?.toLowerCase().includes(searchLower)
     );
@@ -231,7 +231,7 @@ const AllShipments = () => {
               <div className="space-y-4">
                 {filteredShipments.map((shipment) => (
                   <div
-                    key={shipment.shipmentID}
+                    key={shipment.shipmentID || shipment.id}
                     className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center space-x-4 flex-1">
@@ -243,7 +243,7 @@ const AllShipments = () => {
                           {shipment.productName}
                         </h3>
                         <p className="text-sm text-gray-500 truncate">
-                          ID: {shipment.shipmentID}
+                          ID: {shipment.shipmentID || shipment.id}
                         </p>
                         <p className="text-sm text-gray-500 truncate">
                           Owner: {shipment.currentOwnerAlias}
@@ -272,7 +272,7 @@ const AllShipments = () => {
                         size="sm"
                         asChild
                       >
-                        <Link to={`/shipments/${shipment.shipmentID}`}>
+                        <Link to={`/shipments/${shipment.shipmentID || shipment.id}`}> 
                           <Eye className="h-4 w-4 mr-2" />
                           View
                         </Link>

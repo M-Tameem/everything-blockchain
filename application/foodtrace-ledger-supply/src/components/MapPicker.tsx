@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -22,17 +22,55 @@ const MapEvents: React.FC<{ onClick: (lat: number, lng: number) => void }> = ({ 
 
 const MapPicker: React.FC<MapPickerProps> = ({ latitude, longitude, onChange }) => {
   const center: [number, number] = latitude && longitude ? [latitude, longitude] : [0, 0];
+  const mapRef = useRef<any>(null);
+  const [search, setSearch] = useState('');
+
+  const handleSearch = async () => {
+    if (!search.trim()) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(search)}`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        onChange(lat, lon);
+        if (mapRef.current) {
+          mapRef.current.setView([lat, lon], 13);
+        }
+      }
+    } catch (err) {
+      console.error('Address search failed', err);
+    }
+  };
+
   return (
-    <MapContainer center={center} zoom={5} style={{ height: '300px', width: '100%' }}>
-      <TileLayer
-        attribution="&copy; OpenStreetMap contributors"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <MapEvents onClick={onChange} />
-      {latitude !== undefined && longitude !== undefined && (
-        <Marker position={[latitude, longitude]} />
-      )}
-    </MapContainer>
+    <div className="space-y-2">
+      <div className="flex space-x-2">
+        <input
+          className="border p-1 flex-grow"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search address"
+        />
+        <button
+          type="button"
+          onClick={handleSearch}
+          className="px-3 py-1 bg-emerald-600 text-white rounded"
+        >
+          Search
+        </button>
+      </div>
+      <MapContainer center={center} zoom={5} style={{ height: '300px', width: '100%' }} whenCreated={map => (mapRef.current = map)}>
+        <TileLayer
+          attribution="&copy; OpenStreetMap contributors"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MapEvents onClick={onChange} />
+        {latitude !== undefined && longitude !== undefined && (
+          <Marker position={[latitude, longitude]} />
+        )}
+      </MapContainer>
+    </div>
   );
 };
 
