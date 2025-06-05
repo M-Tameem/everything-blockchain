@@ -83,6 +83,7 @@ func (s *FoodtraceSmartContract) CreateShipment(ctx contractapi.TransactionConte
 			FarmerAlias:               actor.alias,
 			FarmerName:                fdArgs.FarmerName,
 			FarmLocation:              fdArgs.FarmLocation,
+			FarmCoordinates:           fdArgs.FarmCoordinates,
 			CropType:                  fdArgs.CropType,
 			PlantingDate:              fdArgs.PlantingDate,
 			FertilizerUsed:            fdArgs.FertilizerUsed,

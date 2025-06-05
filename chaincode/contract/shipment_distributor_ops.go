@@ -55,6 +55,7 @@ func (s *FoodtraceSmartContract) DistributeShipment(ctx contractapi.TransactionC
 		TemperatureRange:      ddArgs.TemperatureRange,
 		StorageTemperature:    ddArgs.StorageTemperature,
 		TransitLocationLog:    ddArgs.TransitLocationLog,
+		TransitGPSLog:         ddArgs.TransitGPSLog,
 		TransportConditions:   ddArgs.TransportConditions,
 		DistributionCenter:    ddArgs.DistributionCenter,
 		DestinationRetailerID: destRetFullID,

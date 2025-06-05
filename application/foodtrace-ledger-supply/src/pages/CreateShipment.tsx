@@ -11,6 +11,7 @@ import { apiClient } from '@/services/api';
 import { useAliases } from '@/hooks/use-aliases';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Package, TestTubeDiagonal } from 'lucide-react'; // Added TestTubeDiagonal for demo button
+import MapPicker from '@/components/MapPicker';
 
 const CreateShipment = () => {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ const CreateShipment = () => {
     unitOfMeasure: 'kg',
     farmerName: '',
     farmLocation: '',
+    farmLatitude: '',
+    farmLongitude: '',
     cropType: '',
     plantingDate: '', // Store as YYYY-MM-DD string from date picker
     harvestDate: '',   // Store as YYYY-MM-DD string from date picker
@@ -69,6 +72,8 @@ const CreateShipment = () => {
       unitOfMeasure: 'kg',
       farmerName: 'Demo Apple Farms Co.',
       farmLocation: 'Green Valley, CA, USA',
+      farmLatitude: '37.0000',
+      farmLongitude: '-122.0000',
       cropType: 'Apples (Fuji)',
       plantingDate: formatDateForInput(planting),
       harvestDate: formatDateForInput(harvest),
@@ -117,6 +122,10 @@ const CreateShipment = () => {
       toast({ title: "Validation Error", description: "Farm Location is required.", variant: "destructive" });
       setLoading(false); return;
     }
+    if (!formData.farmLatitude.trim() || !formData.farmLongitude.trim()) {
+      toast({ title: "Validation Error", description: "Farm GPS coordinates are required.", variant: "destructive" });
+      setLoading(false); return;
+    }
 
     const quantityValue = parseFloat(formData.quantity);
     if (isNaN(quantityValue) || quantityValue <= 0) {
@@ -141,6 +150,10 @@ const CreateShipment = () => {
       const farmerData = {
         farmerName: formData.farmerName.trim(),
         farmLocation: formData.farmLocation.trim(),
+        farmCoordinates: {
+          latitude: parseFloat(formData.farmLatitude),
+          longitude: parseFloat(formData.farmLongitude)
+        },
         cropType: formData.cropType.trim(),
         plantingDate: plantingDateISO,
         harvestDate: harvestDateISO,
@@ -303,6 +316,17 @@ const CreateShipment = () => {
                     value={formData.farmLocation}
                     onChange={(e) => handleInputChange('farmLocation', e.target.value)}
                     placeholder="City, State/Province, Country"
+                  />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Farm Coordinates (click to place marker)</Label>
+                  <MapPicker
+                    latitude={formData.farmLatitude ? parseFloat(formData.farmLatitude) : undefined}
+                    longitude={formData.farmLongitude ? parseFloat(formData.farmLongitude) : undefined}
+                    onChange={(lat, lng) => {
+                      handleInputChange('farmLatitude', lat.toFixed(5));
+                      handleInputChange('farmLongitude', lng.toFixed(5));
+                    }}
                   />
                 </div>
               </div>
