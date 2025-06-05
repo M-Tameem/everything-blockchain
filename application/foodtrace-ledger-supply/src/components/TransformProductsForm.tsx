@@ -95,6 +95,15 @@ const TransformProductsForm: React.FC<TransformProductsFormProps> = ({ shipmentI
         qualityCertifications: [],
         destinationDistributorId: formData.destinationDistributorId.trim()
       };
+
+      // Process shipment first so processor becomes the owner
+      try {
+        await apiClient.processShipment(shipmentId, processorData);
+        console.log(`✅ Shipment ${shipmentId} processed.`);
+      } catch (err) {
+        console.warn(`⚠️ ProcessShipment failed for ${shipmentId}:`, err);
+      }
+
       await apiClient.transformProducts(inputConsumption, newProducts, processorData);
       toast({ title: 'Products transformed', description: `New shipment ${newId} created.` });
       onSuccess();

@@ -154,6 +154,17 @@ const TransformProductsPage: React.FC = () => {
         qualityCertifications: [],
         destinationDistributorId: procData.destinationDistributorId.trim()
       };
+
+      // Ensure processor owns inputs by processing them first
+      for (const id of uniqueSelected) {
+        try {
+          await apiClient.processShipment(id, payloadProc);
+          console.log(`✅ Shipment ${id} processed for transformation.`);
+        } catch (err) {
+          console.warn(`⚠️ ProcessShipment failed for ${id}:`, err);
+        }
+      }
+
       console.log('📤 Calling transformProducts with:', {inputConsumption, newProducts, payloadProc});
       await apiClient.transformProducts(inputConsumption,newProducts,payloadProc);
       toast({title:'Transformation complete'});
