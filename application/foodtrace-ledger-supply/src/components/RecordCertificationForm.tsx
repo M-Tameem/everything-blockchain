@@ -22,6 +22,7 @@ const RecordCertificationForm: React.FC<RecordCertificationFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     inspectionDate: '', // Will be YYYY-MM-DDTHH:mm from the input
     inspectionReportHash: '',
@@ -46,6 +47,23 @@ const RecordCertificationForm: React.FC<RecordCertificationFormProps> = ({
       comments: 'All standards met.'
     });
     toast({ title: 'Demo data loaded' });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    try {
+      setUploading(true);
+      const res = await apiClient.uploadFileToIpfs(file);
+      setFormData(prev => ({ ...prev, inspectionReportHash: res.hash }));
+      toast({ title: 'File uploaded', description: res.hash });
+    } catch (err) {
+      console.error('IPFS upload error', err);
+      toast({ title: 'Upload failed', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
 
@@ -153,13 +171,11 @@ const RecordCertificationForm: React.FC<RecordCertificationFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="inspectionReportHash">Inspection Report Hash (Optional)</Label>
-            <Input
-              id="inspectionReportHash"
-              value={formData.inspectionReportHash}
-              onChange={(e) => handleInputChange('inspectionReportHash', e.target.value)}
-              placeholder="e.g., QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco"
-            />
+            <Label htmlFor="reportFile">Inspection Report PDF (Optional)</Label>
+            <Input id="reportFile" type="file" accept="application/pdf" onChange={handleFileUpload} disabled={uploading} />
+            {formData.inspectionReportHash && (
+              <p className="text-sm text-gray-600 break-all">Hash: {formData.inspectionReportHash}</p>
+            )}
           </div>
 
           <div>

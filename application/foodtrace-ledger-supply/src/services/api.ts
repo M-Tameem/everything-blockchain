@@ -19,6 +19,26 @@ class ApiClient {
     };
   }
 
+  async uploadFileToIpfs(file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/api/ipfs/upload`, {
+      method: 'POST',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: form,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Upload failed');
+    return data as { hash: string; name: string; link: string };
+  }
+
+  async getShipmentQrCode(id: string) {
+    return this.request<{ qrCodeDataUrl: string; link: string }>(`/api/shipments/${encodeURIComponent(id)}/qrcode`);
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
