@@ -249,7 +249,6 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
                 required
               />
             </div>
-            </div>
             <div>
               <Label htmlFor="productNameRetail">Product Name (Retail)</Label>
               <Input
@@ -259,6 +258,7 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
                 placeholder="Retail-specific product name (optional)"
               />
             </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -271,6 +271,8 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
                 placeholder="Optional retailer-specific expiry"
               />
             </div>
+            <div></div>
+          </div>
 
           <div className="flex justify-end space-x-2 pt-2">
             <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
