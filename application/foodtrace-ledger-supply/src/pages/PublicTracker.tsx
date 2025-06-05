@@ -20,6 +20,7 @@ import {
   Home,
   ArrowLeft
 } from 'lucide-react';
+import ShipmentMapView from '@/components/ShipmentMapView';
 
 interface TimelineStep {
   key: string;
@@ -260,6 +261,23 @@ const PublicTracker = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {(shipment.farmerData?.farmCoordinates || (shipment.distributorData && shipment.distributorData.transitGpsLog.length > 0)) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <MapPin className="h-5 w-5" />
+                    <span>Route Map</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ShipmentMapView
+                    farmLocation={shipment.farmerData?.farmCoordinates}
+                    route={shipment.distributorData?.transitGpsLog}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Supply Chain Timeline */}
             <Card>

@@ -11,6 +11,7 @@ import { apiClient } from '@/services/api';
 import { useAliases } from '@/hooks/use-aliases';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Package, TestTubeDiagonal } from 'lucide-react'; // Added TestTubeDiagonal for demo button
+import MapPicker from '@/components/MapPicker';
 
 const CreateShipment = () => {
   const navigate = useNavigate();
@@ -317,26 +318,15 @@ const CreateShipment = () => {
                     placeholder="City, State/Province, Country"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="farmLatitude">Latitude *</Label>
-                  <Input
-                    id="farmLatitude"
-                    type="number"
-                    step="0.0001"
-                    value={formData.farmLatitude}
-                    onChange={(e) => handleInputChange('farmLatitude', e.target.value)}
-                    placeholder="e.g., 37.7749"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="farmLongitude">Longitude *</Label>
-                  <Input
-                    id="farmLongitude"
-                    type="number"
-                    step="0.0001"
-                    value={formData.farmLongitude}
-                    onChange={(e) => handleInputChange('farmLongitude', e.target.value)}
-                    placeholder="e.g., -122.4194"
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Farm Coordinates (click to place marker)</Label>
+                  <MapPicker
+                    latitude={formData.farmLatitude ? parseFloat(formData.farmLatitude) : undefined}
+                    longitude={formData.farmLongitude ? parseFloat(formData.farmLongitude) : undefined}
+                    onChange={(lat, lng) => {
+                      handleInputChange('farmLatitude', lat.toFixed(5));
+                      handleInputChange('farmLongitude', lng.toFixed(5));
+                    }}
                   />
                 </div>
               </div>

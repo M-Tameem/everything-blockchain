@@ -18,6 +18,7 @@ import ReceiveShipmentForm from '@/components/ReceiveShipmentForm';
 import RecordCertificationForm from '@/components/RecordCertificationForm';
 import RecallForm from '@/components/RecallForm';
 import ArchiveShipmentForm from '@/components/ArchiveShipmentForm';
+import ShipmentMapView from '@/components/ShipmentMapView';
 import TransformProductsForm from '@/components/TransformProductsForm';
 import QrCodeDisplay from '@/components/QrCodeDisplay';
 
@@ -306,6 +307,18 @@ const ShipmentDetails = () => {
               <DetailItem label="Created At" value={formatDate(shipment.createdAt)} />
             </CardContent>
           </Card>
+
+          {(shipment.farmerData?.farmCoordinates || (shipment.distributorData && shipment.distributorData.transitGpsLog.length > 0)) && (
+            <Card>
+              <CardHeader><CardTitle className="flex items-center space-x-2"><MapPin className="h-5 w-5" /><span>Route Map</span></CardTitle></CardHeader>
+              <CardContent>
+                <ShipmentMapView
+                  farmLocation={shipment.farmerData?.farmCoordinates}
+                  route={shipment.distributorData?.transitGpsLog}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {shipment.farmerData && (
             <Card>

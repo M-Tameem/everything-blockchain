@@ -9,6 +9,7 @@ import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAliases } from '@/hooks/use-aliases';
 import { Truck, X, TestTubeDiagonal } from 'lucide-react';
+import RouteMapInput, { GeoPoint } from './RouteMapInput';
 
 interface DistributeShipmentFormProps {
   shipmentId: string;
@@ -33,11 +34,11 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
     distributionCenter: '',
     distributionLineId: '',
     transitLocationLog: '',
-    transitGpsLog: '',
+    transitGpsLog: [] as GeoPoint[],
     destinationRetailerId: ''
   });
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
+  const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -53,7 +54,10 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
       distributionCenter: 'Demo DC',
       distributionLineId: 'TRUCK_DEMO_1',
       transitLocationLog: 'Warehouse A, Hub B',
-      transitGpsLog: '37.1,-122.1\n37.2,-122.2',
+      transitGpsLog: [
+        { latitude: 37.1, longitude: -122.1 },
+        { latitude: 37.2, longitude: -122.2 }
+      ],
       destinationRetailerId: retailerAliases[0] || ''
     });
     toast({ title: 'Demo data loaded' });
@@ -104,17 +108,7 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
       const transitLocationLogArray = formData.transitLocationLog.trim()
         ? formData.transitLocationLog.split(',').map(location => location.trim()).filter(location => location)
         : [];
-      const transitGpsLogArray = formData.transitGpsLog.trim()
-        ? formData.transitGpsLog.split('\n').map(line => {
-            const [lat, lng] = line.split(',').map(s => s.trim());
-            const latNum = parseFloat(lat);
-            const lngNum = parseFloat(lng);
-            if (!isNaN(latNum) && !isNaN(lngNum)) {
-              return { latitude: latNum, longitude: lngNum };
-            }
-            return null;
-          }).filter(Boolean) as { latitude: number; longitude: number }[]
-        : [];
+      const transitGpsLogArray = formData.transitGpsLog;
 
       const payloadForApi = {
         pickupDateTime: pickupDateTimeISO,
@@ -259,14 +253,11 @@ const DistributeShipmentForm: React.FC<DistributeShipmentFormProps> = ({
               rows={2}
             />
           </div>
-          <div>
-            <Label htmlFor="transitGpsLog">Transit GPS Log (lat,lng per line)</Label>
-            <Textarea
-              id="transitGpsLog"
-              value={formData.transitGpsLog}
-              onChange={(e) => handleInputChange('transitGpsLog', e.target.value)}
-              placeholder="37.1,-122.1\n37.2,-122.2"
-              rows={2}
+          <div className="md:col-span-2 space-y-2">
+            <Label>Transit GPS Log (click map to add points)</Label>
+            <RouteMapInput
+              points={formData.transitGpsLog}
+              onChange={(pts) => handleInputChange('transitGpsLog', pts)}
             />
           </div>
 
