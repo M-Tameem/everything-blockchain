@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Building, X, TestTubeDiagonal } from 'lucide-react';
+import MapPicker from './MapPicker';
 import QrCodeDisplay from './QrCodeDisplay';
 
 interface ReceiveShipmentFormProps {
@@ -31,7 +32,9 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
     retailerExpiryDate: '',
     storeId: '',
     storeLocation: '',
-    price: ''
+    price: '',
+    storeLatitude: '',
+    storeLongitude: ''
   });
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
@@ -53,7 +56,9 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
       retailerExpiryDate: expiry.toISOString().slice(0,10),
       storeId: 'STORE_DEMO_1',
       storeLocation: 'Demo City',
-      price: '9.99'
+      price: '9.99',
+      storeLatitude: '0',
+      storeLongitude: '0'
     });
     toast({ title: 'Demo data loaded' });
   };
@@ -73,6 +78,10 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
     }
     if (!formData.storeId.trim()) {
       toast({ title: "Validation Error", description: "Store ID is required.", variant: "destructive" });
+      setLoading(false); return;
+    }
+    if (!formData.storeLatitude || !formData.storeLongitude) {
+      toast({ title: "Validation Error", description: "Store coordinates are required.", variant: "destructive" });
       setLoading(false); return;
     }
     if (!formData.retailerLineId.trim()) {
@@ -123,7 +132,11 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
         retailerExpiryDate: retailerExpiryDateISO,
         storeId: formData.storeId.trim(),
         storeLocation: formData.storeLocation.trim(),
-        price: priceValue
+        price: priceValue,
+        storeCoordinates: {
+          latitude: parseFloat(formData.storeLatitude),
+          longitude: parseFloat(formData.storeLongitude)
+        }
       };
 
       console.log("Frontend: Sending receive shipment payload:", JSON.stringify({ retailerData: payloadForApi }, null, 2));
@@ -204,16 +217,28 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="storeId">Store ID *</Label>
-              <Input
-                id="storeId"
-                value={formData.storeId}
-                onChange={(e) => handleInputChange('storeId', e.target.value)}
-                required
-                placeholder="e.g., STORE-001"
-              />
-            </div>
-          </div>
+          <Label htmlFor="storeId">Store ID *</Label>
+          <Input
+            id="storeId"
+            value={formData.storeId}
+            onChange={(e) => handleInputChange('storeId', e.target.value)}
+            required
+            placeholder="e.g., STORE-001"
+          />
+        </div>
+      </div>
+
+      <div className="md:col-span-2 space-y-2">
+        <Label>Store Coordinates (click map)</Label>
+        <MapPicker
+          latitude={formData.storeLatitude ? parseFloat(formData.storeLatitude) : undefined}
+          longitude={formData.storeLongitude ? parseFloat(formData.storeLongitude) : undefined}
+          onChange={(lat, lng) => {
+            handleInputChange('storeLatitude', lat.toFixed(5));
+            handleInputChange('storeLongitude', lng.toFixed(5));
+          }}
+        />
+      </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

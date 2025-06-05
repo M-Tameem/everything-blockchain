@@ -9,6 +9,7 @@ import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAliases } from '@/hooks/use-aliases';
 import { CheckCircle, X, TestTubeDiagonal } from 'lucide-react';
+import MapPicker from './MapPicker';
 
 interface ProcessShipmentFormProps {
   shipmentId: string;
@@ -32,6 +33,8 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
     outputBatchId: '',
     expiryDate: '', // Will be YYYY-MM-DD
     processingLocation: '',
+    processingLatitude: '',
+    processingLongitude: '',
     qualityCertifications: '', // User will input as CSV, e.g., "Organic,Grade A"
     destinationDistributorId: '' // Alias of the distributor
   });
@@ -52,6 +55,8 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
       outputBatchId: 'DEMO_BATCH_001',
       expiryDate: expiry.toISOString().slice(0,10),
       processingLocation: 'Demo Facility',
+      processingLatitude: '0',
+      processingLongitude: '0',
       qualityCertifications: 'Organic,HACCP',
       destinationDistributorId: distributorAliases[0] || ''
     });
@@ -91,6 +96,10 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
       toast({ title: "Validation Error", description: "Processing Location is required.", variant: "destructive" });
       setLoading(false); return;
     }
+    if (!formData.processingLatitude || !formData.processingLongitude) {
+      toast({ title: "Validation Error", description: "Processing coordinates are required.", variant: "destructive" });
+      setLoading(false); return;
+    }
     // Optional: Validate destinationDistributorId if it becomes mandatory
     // if (!formData.destinationDistributorId.trim()) {
     //   toast({ title: "Validation Error", description: "Destination Distributor ID is required.", variant: "destructive" });
@@ -118,6 +127,10 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
         outputBatchId: formData.outputBatchId.trim(),
         expiryDate: expiryDateISO,
         processingLocation: formData.processingLocation.trim(),
+        processingCoordinates: {
+          latitude: parseFloat(formData.processingLatitude),
+          longitude: parseFloat(formData.processingLongitude)
+        },
         qualityCertifications: qualityCertificationsArray,
         destinationDistributorId: formData.destinationDistributorId.trim()
       };
@@ -238,14 +251,25 @@ const ProcessShipmentForm: React.FC<ProcessShipmentFormProps> = ({
 
           <div>
             <Label htmlFor="processingLocation">Processing Location *</Label>
-            <Input
-              id="processingLocation"
-              value={formData.processingLocation}
-              onChange={(e) => handleInputChange('processingLocation', e.target.value)}
-              required
-              placeholder="e.g., Main Processing Plant, City, State"
-            />
-          </div>
+          <Input
+            id="processingLocation"
+            value={formData.processingLocation}
+            onChange={(e) => handleInputChange('processingLocation', e.target.value)}
+            required
+            placeholder="e.g., Main Processing Plant, City, State"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Processing Coordinates (click map)</Label>
+          <MapPicker
+            latitude={formData.processingLatitude ? parseFloat(formData.processingLatitude) : undefined}
+            longitude={formData.processingLongitude ? parseFloat(formData.processingLongitude) : undefined}
+            onChange={(lat, lng) => {
+              handleInputChange('processingLatitude', lat.toFixed(5));
+              handleInputChange('processingLongitude', lng.toFixed(5));
+            }}
+          />
+        </div>
 
           {/* New Fields to match test-server.js */}
           <div>

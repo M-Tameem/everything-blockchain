@@ -52,6 +52,7 @@ func (s *FoodtraceSmartContract) ReceiveShipment(ctx contractapi.TransactionCont
 		RetailerExpiryDate: rdArgs.RetailerExpiryDate,
 		StoreID:            rdArgs.StoreID,
 		StoreLocation:      rdArgs.StoreLocation,
+		StoreCoordinates:   rdArgs.StoreCoordinates,
 		Price:              rdArgs.Price,
 		QRCodeLink:         rdArgs.QRCodeLink,
 	}
