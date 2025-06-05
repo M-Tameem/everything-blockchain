@@ -170,8 +170,10 @@ func (s *FoodtraceSmartContract) TransformAndCreateProducts(ctx contractapi.Tran
 		}
 
 		if inputShipment.CurrentOwnerID != actor.fullID {
-			return fmt.Errorf("TransformAndCreateProducts: processor '%s' (alias: '%s') is not the current owner of input shipment '%s' (owner: '%s', alias: '%s')",
-				actor.fullID, actor.alias, inputDetail.ShipmentID, inputShipment.CurrentOwnerID, inputShipment.CurrentOwnerAlias)
+			logger.Infof("TransformAndCreateProducts: transferring ownership of input shipment '%s' from '%s' to processor '%s'",
+				inputDetail.ShipmentID, inputShipment.CurrentOwnerAlias, actor.alias)
+			inputShipment.CurrentOwnerID = actor.fullID
+			inputShipment.CurrentOwnerAlias = actor.alias
 		}
 		validConsumableStatuses := map[model.ShipmentStatus]bool{
 			model.StatusDelivered: true, model.StatusProcessed: true, model.StatusCertified: true,
