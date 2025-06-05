@@ -33,6 +33,7 @@ const CreateShipment = () => {
     destinationProcessorId: '',
     certificationDocumentHash: ''
   });
+  const [uploading, setUploading] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -80,6 +81,23 @@ const CreateShipment = () => {
         title: "Demo Data Loaded",
         description: "The form has been filled with sample shipment information.",
     });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    try {
+      setUploading(true);
+      const res = await apiClient.uploadFileToIpfs(file);
+      setFormData(prev => ({ ...prev, certificationDocumentHash: res.hash }));
+      toast({ title: 'File uploaded', description: res.hash });
+    } catch (err) {
+      console.error('IPFS upload error', err);
+      toast({ title: 'Upload failed', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -376,13 +394,11 @@ const CreateShipment = () => {
               </div>
 
               <div>
-                <Label htmlFor="certificationDocumentHash">Certification Document Hash</Label>
-                <Input
-                  id="certificationDocumentHash"
-                  value={formData.certificationDocumentHash}
-                  onChange={(e) => handleInputChange('certificationDocumentHash', e.target.value)}
-                  placeholder="Hash of any certification documents"
-                />
+                <Label htmlFor="certDocFile">Certification PDF</Label>
+                <Input id="certDocFile" type="file" accept="application/pdf" onChange={handleFileUpload} disabled={uploading} />
+                {formData.certificationDocumentHash && (
+                  <p className="text-sm text-gray-600 break-all">Hash: {formData.certificationDocumentHash}</p>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Building, X, TestTubeDiagonal } from 'lucide-react';
+import QrCodeDisplay from './QrCodeDisplay';
 
 interface ReceiveShipmentFormProps {
   shipmentId: string;
@@ -20,6 +21,7 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [qrLink, setQrLink] = useState('');
   const [formData, setFormData] = useState({
     dateReceived: '',
     retailerLineId: '',
@@ -29,8 +31,7 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
     retailerExpiryDate: '',
     storeId: '',
     storeLocation: '',
-    price: '',
-    qrCodeLink: ''
+    price: ''
   });
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
@@ -52,8 +53,7 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
       retailerExpiryDate: expiry.toISOString().slice(0,10),
       storeId: 'STORE_DEMO_1',
       storeLocation: 'Demo City',
-      price: '9.99',
-      qrCodeLink: 'https://demo.example.com/track'
+      price: '9.99'
     });
     toast({ title: 'Demo data loaded' });
   };
@@ -123,18 +123,18 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
         retailerExpiryDate: retailerExpiryDateISO,
         storeId: formData.storeId.trim(),
         storeLocation: formData.storeLocation.trim(),
-        price: priceValue,
-        qrCodeLink: formData.qrCodeLink.trim()
+        price: priceValue
       };
 
       console.log("Frontend: Sending receive shipment payload:", JSON.stringify({ retailerData: payloadForApi }, null, 2));
       
       // apiClient.receiveShipment will wrap payloadForApi under a "retailerData" key
-      await apiClient.receiveShipment(shipmentId, payloadForApi);
+      const res = await apiClient.receiveShipment(shipmentId, payloadForApi);
+      setQrLink(res.qrCodeLink);
 
       toast({
         title: "Shipment received successfully",
-        description: "The shipment has been received and is available in store.",
+        description: "The shipment has been received.",
       });
       onSuccess();
     } catch (error) {
@@ -249,7 +249,6 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
                 required
               />
             </div>
-            </div>
             <div>
               <Label htmlFor="productNameRetail">Product Name (Retail)</Label>
               <Input
@@ -259,6 +258,7 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
                 placeholder="Retail-specific product name (optional)"
               />
             </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -271,18 +271,8 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
                 placeholder="Optional retailer-specific expiry"
               />
             </div>
-
-            </div>
-            <div>
-              <Label htmlFor="qrCodeLink">QR Code Link (Optional)</Label>
-              <Input
-                id="qrCodeLink"
-                type="url"
-                value={formData.qrCodeLink}
-                onChange={(e) => handleInputChange('qrCodeLink', e.target.value)}
-                placeholder="https://example.com/track/shipment-id"
-              />
-            </div>
+            <div></div>
+          </div>
 
           <div className="flex justify-end space-x-2 pt-2">
             <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
@@ -293,6 +283,12 @@ const ReceiveShipmentForm: React.FC<ReceiveShipmentFormProps> = ({
               {loading ? 'Receiving...' : 'Receive Shipment'}
             </Button>
           </div>
+          {qrLink && (
+            <div className="mt-4 text-center">
+              <p className="text-sm mb-2 break-all">QR Code Link: <a href={qrLink} target="_blank" rel="noopener noreferrer" className="underline">{qrLink}</a></p>
+              <QrCodeDisplay value={qrLink} />
+            </div>
+          )}
         </form>
       </CardContent>
     </Card>

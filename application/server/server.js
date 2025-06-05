@@ -6,6 +6,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sqlite3 = require('sqlite3').verbose();
 const https = require('https');
+const axios = require('axios');
+const multer = require('multer');
+const FormData = require('form-data');
+const QRCode = require('qrcode');
 const path = require('path');
 require('dotenv').config();
 
@@ -37,6 +41,7 @@ app.use(limiter);
 // Body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Database setup
 const db = new sqlite3.Database('./foodtrace.db');
@@ -64,12 +69,20 @@ const KALEIDO_CONFIG = {
   chaincodeName: process.env.KALEIDO_CHAINCODE_NAME || 'banana'
 };
 
+const IPFS_CONFIG = {
+  apiUrlBase: process.env.KALEIDO_IPFS_API_URL_BASE,
+  appCred: process.env.KALEIDO_IPFS_APP_CRED
+};
+
 const KALEIDO_URLS = {
   apiGateway: `https://${KALEIDO_CONFIG.runtimeHostname}`,
   identity: `https://${KALEIDO_CONFIG.identityServiceHostname}/identities`,
   transactions: `https://${KALEIDO_CONFIG.runtimeHostname}/transactions`,
   query: `https://${KALEIDO_CONFIG.runtimeHostname}/query`
 };
+
+const PUBLIC_SHIPMENT_BASE_URL = process.env.PUBLIC_SHIPMENT_BASE_URL ||
+  `http://localhost:${PORT}/api/shipments/public`;
 
 // Kaleido HTTP Request Helper (replicating Python _req function)
 function makeKaleidoRequest(url, payload = null, method = 'POST') {
@@ -677,6 +690,54 @@ app.get('/api/shipments/:id', async (req, res) => {
   }
 });
 
+app.get('/api/shipments/public/:id', async (req, res) => {
+  try {
+    const adminUser = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM users WHERE is_admin = 1 LIMIT 1', (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+    if (!adminUser) {
+      return res.status(500).json({ error: 'No user available for query' });
+    }
+
+    const result = await queryChaincode(adminUser.kid_name, 'GetShipmentPublicDetails', [req.params.id]);
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: 'Failed to fetch shipment details', details: result.error });
+    }
+  } catch (error) {
+    console.error('Get public shipment details error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/shipments/:id/qrcode', async (req, res) => {
+  try {
+    const adminUser = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM users WHERE is_admin = 1 LIMIT 1', (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+    if (!adminUser) {
+      return res.status(500).json({ error: 'No user available for query' });
+    }
+    const result = await queryChaincode(adminUser.kid_name, 'GetShipmentPublicDetails', [req.params.id]);
+    if (!result.success) {
+      return res.status(500).json({ error: 'Failed to fetch shipment details', details: result.error });
+    }
+    const link = result.data?.retailerData?.qrCodeLink || `${PUBLIC_SHIPMENT_BASE_URL}/${req.params.id}`;
+    const dataUrl = await QRCode.toDataURL(link);
+    res.json({ qrCodeDataUrl: dataUrl, link });
+  } catch (error) {
+    console.error('Generate QR code error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post('/api/shipments', authenticateToken, requireRole(['farmer']), async (req, res) => {
   try {
     const { shipmentId, productName, description, quantity, unitOfMeasure, farmerData } = req.body;
@@ -771,13 +832,16 @@ app.post('/api/shipments/:id/distribute', authenticateToken, requireRole(['distr
 app.post('/api/shipments/:id/receive', authenticateToken, requireRole(['retailer']), async (req, res) => {
   try {
     const { retailerData } = req.body;
-    
+    if (retailerData && !retailerData.qrCodeLink) {
+      retailerData.qrCodeLink = `${PUBLIC_SHIPMENT_BASE_URL}/${req.params.id}`;
+    }
+
     const result = await invokeChaincode(req.user.kid_name, 'ReceiveShipment', [
       req.params.id, JSON.stringify(retailerData)
     ]);
     
     if (isCallSuccessful(result)) {
-      res.json({ message: 'Shipment received successfully' });
+      res.json({ message: 'Shipment received successfully', qrCodeLink: retailerData.qrCodeLink });
     } else {
       res.status(500).json({ error: 'Failed to receive shipment', details: result });
     }
@@ -935,6 +999,28 @@ app.get('/api/utils/fullid/:alias', authenticateToken, requireAdmin, async (req,
   } catch (error) {
     console.error('Get FullID error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// IPFS file upload for certifications
+app.post('/api/ipfs/upload', authenticateToken, requireRole(['certifier', 'farmer']), upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const auth = Buffer.from(IPFS_CONFIG.appCred).toString('base64');
+    const form = new FormData();
+    form.append('file', req.file.buffer, req.file.originalname);
+    const response = await axios.post(`${IPFS_CONFIG.apiUrlBase}/api/v0/add`, form, {
+      headers: { ...form.getHeaders(), Authorization: `Basic ${auth}` },
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
+    });
+    const { Hash, Name } = response.data;
+    const link = `${IPFS_CONFIG.apiUrlBase}/ipfs/${Hash}`;
+    res.json({ hash: Hash, name: Name, link });
+  } catch (err) {
+    console.error('IPFS upload error:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to upload file' });
   }
 });
 
