@@ -29,6 +29,7 @@ const TransformProductsForm: React.FC<TransformProductsFormProps> = ({ shipmentI
     processingType: '',
     processingLineId: '',
     dateProcessed: '',
+    contaminationCheck: '',
     outputBatchId: '',
     expiryDate: '',
     destinationDistributorId: ''
@@ -51,6 +52,7 @@ const TransformProductsForm: React.FC<TransformProductsFormProps> = ({ shipmentI
       processingType: 'Demo Transformation',
       processingLineId: 'LINE_DEMO_2',
       dateProcessed: now.toISOString().slice(0,16),
+      contaminationCheck: 'PASSED',
       outputBatchId: 'DEMO_OUT_001',
       expiryDate: exp.toISOString().slice(0,10),
       destinationDistributorId: distributorAliases[0] || ''
@@ -86,6 +88,7 @@ const TransformProductsForm: React.FC<TransformProductsFormProps> = ({ shipmentI
         processingType: formData.processingType.trim(),
         processingLineId: formData.processingLineId.trim(),
         dateProcessed: new Date(formData.dateProcessed).toISOString(),
+        contaminationCheck: formData.contaminationCheck.trim() || 'PASSED',
         outputBatchId: formData.outputBatchId.trim(),
         expiryDate: new Date(formData.expiryDate + 'T00:00:00Z').toISOString(),
         processingLocation: 'Transformation Plant',
@@ -162,6 +165,16 @@ const TransformProductsForm: React.FC<TransformProductsFormProps> = ({ shipmentI
             <div>
               <Label htmlFor="dateProcessed">Date Processed</Label>
               <Input id="dateProcessed" type="datetime-local" value={formData.dateProcessed} onChange={e => handleChange('dateProcessed', e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="contaminationCheck">Contamination Check</Label>
+              <Select value={formData.contaminationCheck} onValueChange={val => handleChange('contaminationCheck', val)}>
+                <SelectTrigger id="contaminationCheck"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PASSED">Passed</SelectItem>
+                  <SelectItem value="FAILED">Failed</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="outputBatchId">Output Batch ID</Label>
