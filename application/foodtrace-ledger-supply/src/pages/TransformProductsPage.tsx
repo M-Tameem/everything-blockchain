@@ -43,7 +43,7 @@ const TransformProductsPage: React.FC = () => {
     processingType: '',
     processingLineId: '',
     dateProcessed: '',
-    contaminationCheck: '',
+    contaminationCheck: 'PASSED',
     outputBatchId: '',
     expiryDate: '',
     destinationDistributorId: ''

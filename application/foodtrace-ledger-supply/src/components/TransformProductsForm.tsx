@@ -29,7 +29,7 @@ const TransformProductsForm: React.FC<TransformProductsFormProps> = ({ shipmentI
     processingType: '',
     processingLineId: '',
     dateProcessed: '',
-    contaminationCheck: '',
+    contaminationCheck: 'PASSED',
     outputBatchId: '',
     expiryDate: '',
     destinationDistributorId: ''
