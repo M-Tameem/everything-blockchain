@@ -213,10 +213,6 @@ func (s *FoodtraceSmartContract) GetMyShipments(ctx contractapi.TransactionConte
 // Fix for GetAllShipments in shipment_query_ops.go
 func (s *FoodtraceSmartContract) GetAllShipments(ctx contractapi.TransactionContextInterface, pageSizeStr string, bookmark string) (*model.PaginatedShipmentResponse, error) {
 	im := NewIdentityManager(ctx)
-	if err := s.requireAdmin(ctx, im); err != nil {
-		return nil, fmt.Errorf("GetAllShipments: %w", err)
-	}
-
 	pageSize, err := strconv.ParseInt(pageSizeStr, 10, 32)
 	if err != nil || pageSize <= 0 {
 		pageSize = 10

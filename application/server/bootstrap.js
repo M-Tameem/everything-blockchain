@@ -26,10 +26,10 @@ const KALEIDO_URLS = {
 
 // Default admin configuration
 const ADMIN_CONFIG = {
-  username: 'admin',
-  password: 'admin123', // Change this!
-  kid_name: 'admin_main_bootstrap',
-  chaincode_alias: 'MainAdminFT'
+  username: 'admin1',
+  password: 'admin1234', // Change this!
+  kid_name: 'admin_main_bootstraper',
+  chaincode_alias: 'MainAdminFTT'
 };
 
 function makeKaleidoRequest(url, payload = null, method = 'POST') {
