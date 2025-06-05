@@ -192,7 +192,15 @@ const TransformProductsPage: React.FC = () => {
                               No available shipments
                             </div>
                           ) : (
-                            consumable.map(s => (
+                            consumable
+                              .filter(opt => {
+                                const others = inputs
+                                  .filter((_, i) => i !== idx)
+                                  .map(i => i.shipmentId)
+                                  .filter(Boolean);
+                                return !others.includes(String(opt.shipmentID || opt.id));
+                              })
+                              .map(s => (
                               <SelectItem
                                 key={s.shipmentID || s.id}
                                 value={String(s.shipmentID || s.id)}
